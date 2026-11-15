@@ -1,21 +1,39 @@
 # StudyRank
 
-StudyRank is a static, mobile-first study-to-play app. It uses plain HTML, CSS, and JavaScript and can be hosted on GitHub Pages. Study answers to earn points, exchange points for tickets, and simulate timed Mobile Legends sessions.
+A study-to-play app. Solve problems, get graded by AI, earn points, and redeem them for timed game sessions. Everything runs in the browser from a single file, `index.html`, with no build step.
 
-## Publish with GitHub Pages
+## Features
 
-1. Open the repository **Settings**.
-2. In **Pages**, select **Deploy from a branch**.
-3. Choose branch **main** and folder **/ (root)**, then save.
-4. Open the Pages URL shown in Settings after the deployment finishes.
+- Anki-style decks: create, rename and delete decks, and add, edit, move or delete cards.
+- One "Your solution" box for steps and a final answer, plus optional photo of handwritten work.
+- AI grading with a detailed full solution that refers to your own work (Gemini, your own key).
+- Answer-key checking when AI is off.
+- Weak spots: missed cards come back after 10 minutes, then 1, 3, 7 and 14 days. They never disappear on their own, and you can practice them any time.
+- Ranks from Warrior to Mythic, points, streaks and tickets (100 points = 1 ticket = 20 minutes, no daily limit). The game lock is simulated.
+- Anki import and export as `.apkg` files (legacy format, text only).
 
-## Gemini API key
+## Put it online with GitHub Pages
 
-AI grading is optional. Add your own key in AI settings. The key is stored only in localStorage in the user's browser; never put a key in repository files. When AI grading is enabled, answers and any attached photo are sent to Google Gemini.
+1. Create a public repository, for example `studyrank`.
+2. Upload `index.html` (and this README) with **Add file > Upload files**, then **Commit changes**.
+3. Open **Settings > Pages**. Under **Build and deployment**, set **Source** to **Deploy from a branch**, choose branch `main` and folder `/ (root)`, then **Save**.
+4. After a few minutes the app is at `https://YOUR-USERNAME.github.io/studyrank/`.
+5. On your phone, open the link and use your browser menu's **Add to Home screen**.
 
-## Notes
+## Turn on AI grading
 
-- Progress, decks, weak spots, and the Gemini key are stored in the current browser and are not synced.
-- Anki import/export loads JSZip 3.10.1 and sql.js 1.10.3 from jsDelivr only when an import or export is requested.
-- Game locking is a simulated countdown; this page does not block Mobile Legends.
-- Test manually on mobile browsers and import exported `.apkg` packages into Anki/AnkiDroid before relying on backups.
+1. Create a Gemini API key at https://aistudio.google.com/apikey. Make one just for this app.
+2. In the app, open **AI settings**, paste the key and tap **Save and test**.
+3. The key is stored only in your own browser and is sent only to Google. Never put it in the repository.
+4. If grading stops working, the model name may have been retired. Type a newer Gemini model name in **AI settings**.
+
+Answers and photos you submit are sent to Google while AI grading is on and count against your Gemini quota.
+
+## Your data
+
+Decks, points and weak spots are saved in your browser's local storage on each device. They do not sync. Export your decks as `.apkg` now and then as a backup.
+
+## Anki
+
+- **Export** downloads an `.apkg` file. Open it with AnkiDroid or use File > Import in Anki.
+- **Import** reads legacy `.apkg` files. If Anki exported in its newest format, re-export with "Support older Anki versions" ticked.
