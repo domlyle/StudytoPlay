@@ -11,7 +11,7 @@ A study-to-play app. Solve problems, get graded by AI, earn points, and redeem t
 - Weak spots: missed cards come back after 10 minutes, then 1, 3, 7 and 14 days. They never disappear on their own, and you can practice them any time.
 - Ranks from Warrior to Mythic, points, streaks and tickets (100 points = 1 ticket = 20 minutes, no daily limit). The game lock is simulated.
 - Study timer: a pausable stopwatch with a subject picker, a topic note, a "still studying?" check-in and points per minute you set for each subject. Finished sessions add points to the same total you spend on tickets. The Study log shows time and points by subject, the last 7 days and recent sessions.
-- Anki import and export as `.apkg` files (legacy format, text only).
+- Anki import and export as `.apkg` files (text only).
 
 ## Put it online with GitHub Pages
 
@@ -37,4 +37,5 @@ Decks, points, weak spots and the study timer log are saved in your browser's lo
 ## Anki
 
 - **Export** downloads an `.apkg` file. Open it with AnkiDroid or use File > Import in Anki.
-- **Import** reads legacy `.apkg` files. If Anki exported in its newest format, re-export with "Support older Anki versions" ticked.
+- **Import** reads `.apkg` files from both older and current Anki versions, including the newest format. Basic and cloze notes are supported; images and sounds are skipped.
+- Export and import load two small libraries (JSZip, sql.js, and fzstd for the newest Anki format) from the jsDelivr CDN, so you need an internet connection the first time you use them.
