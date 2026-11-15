@@ -13,6 +13,10 @@ A study-to-play app. Solve problems, get graded by AI, earn points, and redeem t
 - Study timer: a pausable stopwatch with a subject picker, a topic note, a "still studying?" check-in and points per minute you set for each subject. Finished sessions add points to the same total you spend on tickets. The Study log shows time and points by subject, the last 7 days and recent sessions.
 - Anki import and export as `.apkg` files (text only).
 
+## Pages
+
+Tap **☰ Menu** at the top to switch pages: **Study** (timer, problems, weak spots, decks, Anki import/export), **Study log**, **Game tickets** and **AI settings**. Rank, points, streak and tickets stay visible on every page.
+
 ## Put it online with GitHub Pages
 
 1. Create a public repository, for example `studyrank`.
