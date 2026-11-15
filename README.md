@@ -10,6 +10,7 @@ A study-to-play app. Solve problems, get graded by AI, earn points, and redeem t
 - Answer-key checking when AI is off.
 - Weak spots: missed cards come back after 10 minutes, then 1, 3, 7 and 14 days. They never disappear on their own, and you can practice them any time.
 - Ranks from Warrior to Mythic, points, streaks and tickets (100 points = 1 ticket = 20 minutes, no daily limit). The game lock is simulated.
+- Study timer: a pausable stopwatch with a subject picker, a topic note, a "still studying?" check-in and points per minute you set for each subject. Finished sessions add points to the same total you spend on tickets. The Study log shows time and points by subject, the last 7 days and recent sessions.
 - Anki import and export as `.apkg` files (legacy format, text only).
 
 ## Put it online with GitHub Pages
@@ -31,7 +32,7 @@ Answers and photos you submit are sent to Google while AI grading is on and coun
 
 ## Your data
 
-Decks, points and weak spots are saved in your browser's local storage on each device. They do not sync. Export your decks as `.apkg` now and then as a backup.
+Decks, points, weak spots and the study timer log are saved in your browser's local storage on each device. They do not sync. Export your decks as `.apkg` now and then as a backup.
 
 ## Anki
 
