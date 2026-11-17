@@ -13,6 +13,10 @@ A study-to-play app. Solve problems, get graded by AI, earn points, and redeem t
 - Study timer: a pausable stopwatch with a subject picker, a topic note, a "still studying?" check-in and points per minute you set for each subject. Finished sessions add points to the same total you spend on tickets. The Study log shows time and points by subject, the last 7 days and recent sessions.
 - Anki import and export as `.apkg` files (text only).
 
+## AI chat
+
+Tap **💬 Ask AI** (bottom right) or **Ask a follow-up** under a result to open a chat panel on the right. The AI knows the current problem, the reference answer, your submitted work and your grade, so you can ask why a step works or request another method. It uses your Gemini key and model from AI settings. The photo you submitted for grading is included automatically, and the 📷 button attaches more photos to a question. Chats are kept only until the page is reloaded.
+
 ## Pages
 
 Tap **☰ Menu** at the top to switch pages: **Study** (timer, problems, weak spots, decks, Anki import/export), **Study log**, **Game tickets** and **AI settings**. Rank, points, streak and tickets stay visible on every page.
