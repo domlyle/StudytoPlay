@@ -1,97 +1,118 @@
 # StudyRank
 
-A study-to-play app. Solve problems, get graded by AI, earn points, and redeem them for timed game sessions. Everything runs in the browser from a single file, `index.html`, with no build step.
+Solve problems. Earn points. Earn your free time.
+
+StudyRank is a single-file study app (`index.html`) that makes studying feel like a game. You answer flashcard-style problems and run a study timer to earn points and climb ranks, then spend the points on guilt-free **free time** for anything you enjoy. It runs in the browser, works offline, and can sync across devices.
+
+## How it works
+
+1. **Study** by solving problems or running the study timer.
+2. **Earn points.** Harder problems and longer study sessions give more.
+3. **Convert points into free time** on the Free time page.
+4. **Enjoy your free time** with a countdown that only runs while you are playing or resting.
+
+Invest in studying first, then take your leisure time as a reward for the hard work.
 
 ## Features
 
-- Anki-style decks: create, rename and delete decks, and add, edit, move or delete cards. Subdecks work like Anki: name a deck `Math::Calculus::Limits` and it nests under `Math` and `Calculus`, with collapsible parents that add up their subdecks' cards.
-- One "Your solution" box for steps and a final answer, plus optional photo of handwritten work.
-- AI grading with a detailed full solution that refers to your own work (Gemini or NVIDIA's Mistral Large 4, your own key). Math in feedback and solutions is written in LaTeX and rendered with MathJax (loaded from a CDN the first time a solution contains math).
-- Answer-key checking when AI is off.
-- Weak spots: missed cards come back after 10 minutes, then 1, 3, 7 and 14 days. They never disappear on their own, and you can practice them any time.
-- Ranks from Warrior to Mythic, points, streaks and tickets (100 points = 1 ticket = 20 minutes, no daily limit). The game lock is simulated.
-- Study timer: a pausable stopwatch with a subject picker, a topic note, a "still studying?" check-in and points per minute you set for each subject. Finished sessions add points to the same total you spend on tickets. The Study log shows time and points by subject, the last 7 days and recent sessions.
-- Anki import and export as `.apkg` files (text only).
+### Problems and scoring
+- Decks and subdecks (use `::`, for example `Math::Calculus::Limits`).
+- Base points per problem: Easy 10, Medium 20, Hard 30.
+- Show the answer, then rate yourself Wrong, Partly or Correct (keys `1`, `2`, `3`).
+- Optional **Check with AI**: grades your typed work and an optional photo of your handwritten solution. Its grade replaces your self-rating and finalizes the points, plus up to +5 for clear steps.
+- Streak combo bonus for consecutive correct answers.
+- Math is written as LaTeX between `$...$` and rendered with MathJax.
+- Cards can contain pictures (stored on your device and shrunk to fit).
 
-## AI chat
+### Ranks
+- 7 tiers: Warrior, Elite, Master, Grandmaster, Epic, Legend, Mythic.
+- 5 stars per tier. A correct answer gives +1 star, a wrong answer takes one away. Partial credit changes nothing.
 
-Tap **💬 Ask AI** (bottom right) or **Ask a follow-up** under a result to open a chat panel on the right. The AI knows the current problem, the reference answer, your submitted work and your grade, so you can ask why a step works or request another method. It uses the provider, key and model from AI settings. The photo you submitted for grading is included automatically, and the 📷 button attaches more photos to a question. Chats are kept only until the page is reloaded.
+### Study timer
+- Pausable stopwatch with a progress ring, per-subject points-per-minute rates, and a topic note for each session.
+- Check-in prompt every N minutes ("Still studying?") so idle time is not counted. Choosing "I stopped" rolls the clock back.
+- Points are banked when you press **Finish and bank points**.
+- Study log with daily streak, 7-day chart and recent sessions.
 
-## Pages
+### Free time (replaces game tickets)
+- Convert points to minutes of free time at **5 points = 1 minute** (change `PPM` in the script to adjust).
+- Type the minutes you want or use the +10, +30, +60 and Max buttons.
+- **Start free time** runs a countdown from your banked time. Pause any time, and unused time stays banked. The app beeps when it runs out.
+- The page only tracks time. It does not block any game or app.
+- Old tickets from earlier versions convert automatically to 20 minutes each.
 
-Tap **☰ Menu** at the top to switch pages: **Study** (timer, problems, weak spots, decks, Anki import/export), **Study log**, **Game tickets** and **AI settings**. Rank, points, streak and tickets stay visible on every page.
+### Weak spots
+Missed problems come back on a spaced schedule (10 minutes, then 1, 3, 7 and 14 days) until you get them right, grouped by deck.
 
-## Put it online with GitHub Pages
+### Ask AI chat
+- Follow-up questions about the current problem, with optional photo attachment.
+- Buttons beside each AI bubble: **📝 Copy to note**, **↩ Reply** (quote that message in your next question), **📋 Copy full text** (math kept as LaTeX).
+- Chat history is cleared when you reload the page. Save anything you want to keep as a note.
 
-1. Create a public repository, for example `studyrank`.
-2. Upload `index.html` (and this README) with **Add file > Upload files**, then **Commit changes**.
-3. Open **Settings > Pages**. Under **Build and deployment**, set **Source** to **Deploy from a branch**, choose branch `main` and folder `/ (root)`, then **Save**.
-4. After a few minutes the app is at `https://YOUR-USERNAME.github.io/studyrank/`.
-5. On your phone, open the link and use your browser menu's **Add to Home screen**.
+### Notes
+- Notes panel on the left side of the screen, opened with the **📝 Notes** button.
+- Every note is tied to a deck, and to a card when it came from a card. **Go to card** jumps back to practice it.
+- Add, edit, search, copy and delete notes. **Copy all** exports every note as text.
+- Notes sync and back up with the rest of your data.
 
-## Turn on AI grading
+### Decks and cards
+- Create, rename, delete and export decks. The deck header stays pinned while you scroll its cards.
+- Search cards by any word in the front, back, explanation or deck name.
+- Replace a card's solution (and optionally its answer) with an AI-written one using the buttons under an AI result.
 
-Pick a provider in **AI settings**. Your key is stored only in your own browser and is sent only to that provider (or to your proxy, if you set one). Never put it in the repository.
+### Import, export and backup
+- **Anki:** import and export `.apkg` packages (text and pictures; sounds are skipped). Up to 5000 cards in total.
+- **JSON backup:** one file with decks, pictures, weak spots, points, rank, study log and notes. You can restore (replace everything) or merge. AI keys are never included.
 
-### Google Gemini
+### Sync across devices (optional)
+Sign in with Google to keep everything in sync through Firebase. Without signing in, everything stays only on your device. If two devices change things at the same time, decks, cards, weak spots, notes and study sessions are combined and points and free time are added together. A card or note deleted on one device can come back if the other device edited at the same time.
 
-1. Create a Gemini API key at https://aistudio.google.com/apikey. Make one just for this app.
-2. In **AI settings**, choose **Google Gemini**, paste the key and tap **Save and test**.
-3. If grading stops working, the model name may have been retired. Type a newer Gemini model name in **AI settings**.
+## Setup
 
-### NVIDIA (Mistral Large 4)
+### Run it
+Host `index.html` anywhere static, for example GitHub Pages, or just open the file. Everything is in that one file.
 
-1. Create a key at https://build.nvidia.com (it starts with `nvapi-`). Make one just for this app.
-2. In **AI settings**, choose **NVIDIA (Mistral Large 4)**, paste the key, keep the model `mistralai/mistral-large-4-1t-a52b` and tap **Save and test**.
-3. If the test says it could not reach NVIDIA even though you are online, your browser is probably blocking the call (CORS). Set up the proxy below and paste its address into **Proxy URL**.
-4. Free NVIDIA use has per-minute limits. The app retries a few times on "too many requests" errors; if it still fails, wait a minute.
-5. Photos are shrunk a bit more for NVIDIA to keep requests small.
+### AI (optional)
+Open **Menu, AI settings**, pick a provider and paste your key.
 
-### Optional proxy for NVIDIA (free Cloudflare Worker)
+| Provider | Default model | Key from |
+| --- | --- | --- |
+| Google Gemini | `gemini-3.6-flash` | https://aistudio.google.com/apikey |
+| NVIDIA | `mistralai/mistral-large-4-1t-a52b` | https://build.nvidia.com |
 
-The proxy only forwards your request to NVIDIA and adds the headers browsers need. Your key still lives in your browser and travels in the request header.
+- Your key is stored only in this browser and sent only to the provider (or to your proxy).
+- Browsers may block direct calls to NVIDIA (CORS). If you see "Could not reach NVIDIA", deploy a small proxy (for example a Cloudflare Worker that forwards the request to NVIDIA and adds CORS headers) and paste its HTTPS URL into **Proxy URL**.
+- Answers and photos are sent to the provider only when you tap **Check with AI** or send a chat message.
 
-1. Sign in at https://dash.cloudflare.com and open **Workers & Pages > Create > Hello World**. Name it, for example `studyrank-nvidia`, and deploy it.
-2. Open **Edit code**, replace everything with the code below and **Deploy**.
-3. Copy the worker address (like `https://studyrank-nvidia.YOUR-NAME.workers.dev`) into **Proxy URL** in **AI settings**, then tap **Save and test**.
+### Cloud sync (optional)
+1. In the Firebase console, create a project and add a web app. Put its config into `FB_CFG` in `index.html`.
+2. **Authentication:** enable the Google sign-in method and add your site address under Authorized domains.
+3. **Firestore:** create a database named `default` and publish these rules:
 
-```js
-const CORS = {
-  // Optional: replace * with https://YOUR-USERNAME.github.io
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
-
-export default {
-  async fetch(req) {
-    if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
-    if (req.method !== 'POST') return new Response('POST only', { status: 405, headers: CORS });
-    const res = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: req.headers.get('Authorization') || '',
-      },
-      body: req.body,
-    });
-    return new Response(res.body, {
-      status: res.status,
-      headers: { ...CORS, 'Content-Type': 'application/json' },
-    });
-  },
-};
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+  }
+}
 ```
 
-Answers and photos you submit are sent to the selected provider (and through your proxy, if set) while AI grading is on, and count against that provider's quota.
+## Where your data lives
 
-## Your data
+| Data | Location |
+| --- | --- |
+| Decks, points, weak spots, study log, notes | This browser (`localStorage`) |
+| Card pictures | This browser (IndexedDB) |
+| AI keys | This browser only, never synced or backed up |
+| Running study stopwatch and free-time countdown | This browser only, never synced |
+| Synced data (if signed in) | Your Firebase project |
 
-Decks, points, weak spots and the study timer log are saved in your browser's local storage on each device. They do not sync. Export your decks as `.apkg` now and then as a backup.
+Clearing your browser data erases the local copy, so export a JSON backup now and then or turn on sync.
 
-## Anki
-
-- **Deck hierarchy** is kept both ways. Export writes `Parent::Child` names, which Anki and AnkiDroid show as real subdecks, and import keeps Anki's subdeck structure. Rename a deck to `Other::Name` to move it under another parent.
-- **Export** downloads an `.apkg` file (the Export button on a parent deck exports it with all its subdecks). Open it with AnkiDroid or use File > Import in Anki.
-- **Import** reads `.apkg` files from both older and current Anki versions, including the newest format. Basic and cloze notes are supported; images and sounds are skipped.
-- Export and import load two small libraries (JSZip, sql.js, and fzstd for the newest Anki format) from the jsDelivr CDN, so you need an internet connection the first time you use them.
+## Tech notes
+- One HTML file, no build step.
+- Libraries load on demand: MathJax (math), JSZip and sql.js (Anki import and export), Firebase (sync).
+- Fonts: Inter and Rajdhani from Google Fonts.
