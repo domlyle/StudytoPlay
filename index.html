@@ -168,7 +168,7 @@ body.bkreading .notefab{display:none}
 <div class="bkr"><button id="bkFs" class="mini" type="button" aria-label="Toggle browser full screen" title="Full screen">⛶</button></div></div>
 <div id="bkTmPop" class="bktmpop hide" role="dialog" aria-label="Study timer options"><div class="dhead" style="margin-bottom:4px"><strong id="bkTmState">Ready</strong><button id="bkTmX" class="mini" type="button" aria-label="Close timer options">✕</button></div><p id="bkTmInfo" class="note" style="margin:0 0 6px" aria-live="off"></p>
 <div id="bkTmNudge" class="sw-nudge hide"><strong>Still studying?</strong><p id="bkTmNudgeTxt" class="note" style="margin:4px 0 8px"></p><div class="acts" style="margin:0"><button id="bkTmYes" class="mini go" type="button">Yes, keep going</button><button id="bkTmNo" class="mini" type="button">I stopped</button></div></div>
-<label for="bkTmSubj">Subject</label><select id="bkTmSubj"></select><label for="bkTmNote">Topic or details</label><input id="bkTmNote" maxlength="200" autocomplete="off" placeholder="e.g. Chapter 4, Fourier series"><label for="bkTmChk">Check-in every (minutes, 0 = off)</label><input id="bkTmChk" type="number" min="0" max="240" step="5" inputmode="numeric"><p class="note" style="margin:6px 0 0">Check-ins never beep or pop up while you read. A small dot appears next to the timer instead. Subject rates are edited on the Study page (Settings).</p>
+<label for="bkTmSubj">Subject</label><select id="bkTmSubj"></select><label for="bkTmNote">Topic or details</label><input id="bkTmNote" maxlength="200" autocomplete="off" placeholder="e.g. Chapter 4, Fourier series"><label for="bkTmChk">Check-in every (minutes, 0 = off)</label><input id="bkTmChk" type="number" min="0" max="240" step="5" inputmode="numeric"><div class="dhead" style="margin:10px 0 0"><strong>Subjects and rates</strong><div class="acts" style="margin:0"><button id="bkTmEdit" class="mini" type="button" aria-expanded="false" aria-controls="bkSubjList">Edit</button><button id="bkTmAdd" class="mini go" type="button">Add subject</button></div></div><div id="bkSubjList" class="hide"></div><p class="note" style="margin:6px 0 0">Check-ins never beep or pop up while you read. A small dot appears next to the timer instead. Subjects and rates here are the same as in the Study timer settings.</p>
 <div class="acts" style="margin:10px 0 0"><button id="bkTmFin" class="mini go" type="button" disabled>Finish and bank points</button><button id="bkTmDisc" class="mini danger hide" type="button">Discard</button></div></div>
 <div class="bkbar" role="toolbar" aria-label="Reader controls"><button id="bkPrev" class="mini" type="button" aria-label="Previous page">‹</button><input id="bkPg" type="number" min="1" inputmode="numeric" enterkeyhint="go" title="Type a page number and press Enter" aria-label="Page number (press Enter to go)"><span id="bkOf" class="note" style="margin:0"></span><button id="bkNext" class="mini" type="button" aria-label="Next page">›</button><button id="bkMark" class="mini" type="button" aria-pressed="false" title="Bookmark this page">🔖</button><button id="bkZo" class="mini" type="button" aria-label="Zoom out">−</button><button id="bkZi" class="mini" type="button" aria-label="Zoom in">+</button><button id="bkSnipBtn" class="mini go" type="button">✂ Snip</button><button id="bkPageImg" class="mini" type="button">📄 Send page</button></div>
 <p id="bkHint" class="note bkhint" aria-live="polite"></p>
@@ -486,15 +486,17 @@ function swRenderControls(){
   $('swSubj').disabled=has;$('swState').textContent=run?'Running':has?'Paused':'Ready';$('swBox').dataset.state=run?'run':has?'pause':'idle';bkTmRender()}
 function swRenderSettings(){
   $('swChk').value=String(SW.checkMin);
-  const locked=swLive()>0,list=$('swSubjList');list.replaceChildren();
+  swRenderRows($('swSubjList'),'sw');const bl=$('bkSubjList');if(bl)swRenderRows(bl,'bk')}
+function swRenderRows(list,pre){
+  const locked=swLive()>0;list.replaceChildren();
   SW.subjects.forEach(x=>{
     const row=document.createElement('div');row.className='sw-srow';
     const f1=document.createElement('div'),l1=document.createElement('label'),i1=document.createElement('input');
-    l1.textContent='Subject';l1.htmlFor='swn-'+x.id;i1.id='swn-'+x.id;i1.maxLength=40;i1.value=x.name;
+    l1.textContent='Subject';l1.htmlFor=pre+'n-'+x.id;i1.id=pre+'n-'+x.id;i1.maxLength=40;i1.value=x.name;
     i1.onchange=()=>{const v=i1.value.trim();if(!v){i1.value=x.name;return}x.name=v.slice(0,40);swCommit()};
     f1.append(l1,i1);
     const f2=document.createElement('div'),l2=document.createElement('label'),i2=document.createElement('input');
-    l2.textContent='Pts/min';l2.htmlFor='swr-'+x.id;i2.id='swr-'+x.id;i2.type='number';i2.min='0';i2.max='100';i2.step='0.5';i2.inputMode='decimal';i2.value=String(x.rate);
+    l2.textContent='Pts/min';l2.htmlFor=pre+'r-'+x.id;i2.id=pre+'r-'+x.id;i2.type='number';i2.min='0';i2.max='100';i2.step='0.5';i2.inputMode='decimal';i2.value=String(x.rate);
     i2.onchange=()=>{const v=parseFloat(i2.value);if(!isFinite(v)){i2.value=String(x.rate);return}x.rate=swClamp(v);i2.value=String(x.rate);swCommit()};
     f2.append(l2,i2);
     const del=button('Remove',()=>{SW.subjects=SW.subjects.filter(y=>y!==x);if(SW.subject===x.id)SW.subject=SW.subjects[0].id;swCommit();swRenderSettings()},'danger');
@@ -571,6 +573,9 @@ function bkTmInit(){
   $('bkTmSubj').onchange=()=>{SW.subject=$('bkTmSubj').value;swCommit()};
   $('bkTmNote').oninput=()=>{$('swNote').value=$('bkTmNote').value;$('swNote').dispatchEvent(new Event('input'))};
   $('bkTmChk').onchange=()=>{$('swChk').value=$('bkTmChk').value;$('swChk').onchange();$('bkTmChk').value=String(SW.checkMin)};
+  const bkSL=on=>{$('bkSubjList').classList.toggle('hide',!on);$('bkTmEdit').textContent=on?'Done':'Edit';$('bkTmEdit').setAttribute('aria-expanded',String(on));if(on)swRenderSettings();if(bkTmIsOpen())bkTmPos()};
+  $('bkTmEdit').onclick=()=>bkSL($('bkSubjList').classList.contains('hide'));
+  $('bkTmAdd').onclick=()=>{const sid=id();SW.subjects.push({id:sid,name:'New subject',rate:1});swCommit();bkSL(true);const inp=$('bkn-'+sid);if(inp){inp.focus();inp.select()}};
   $('bkTmFin').onclick=swFinish;$('bkTmDisc').onclick=swDiscard;$('bkTmYes').onclick=()=>$('swYes').click();$('bkTmNo').onclick=()=>$('swNo').click();
   document.addEventListener('click',e=>{if(bkTmIsOpen()&&!e.target.closest('#bkTmPop,#bkTm'))bkTmOpen(false)});
   addEventListener('resize',()=>{if(bkTmIsOpen())bkTmPos()});bkTmFill();bkTmRender()}
