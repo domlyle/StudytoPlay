@@ -84,7 +84,16 @@ body.bkreading{overflow:hidden}
 .bkbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .bkbar input[type=number]{width:64px;text-align:center;padding:6px}
 .bkfull{--bkpw:max(380px,50vw);position:fixed;inset:0;z-index:45;display:flex;flex-direction:column;background:var(--bg)}
-.bktop{display:flex;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 12px 4px}
+.bktop{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 12px 4px}
+.bkl{display:flex;align-items:center;gap:8px;min-width:0}.bkr{display:flex;justify-content:flex-end}
+.bktm{display:flex;align-items:center;gap:4px;padding:2px 4px 2px 8px;border:1px solid var(--line);border-radius:99px;background:var(--surface)}
+.bktmclock{font:600 15px var(--display);font-variant-numeric:tabular-nums;letter-spacing:.02em;color:var(--muted);background:none;border:0;padding:4px 2px;cursor:pointer;min-width:68px;text-align:center}
+.bktm[data-state=pause] .bktmclock{color:var(--accent)}
+.bktm .mini{border-radius:99px;padding:4px 9px;line-height:1.2}
+.bktmdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.bktmpop{position:fixed;z-index:70;top:56px;left:8px;width:min(320px,calc(100vw - 16px));max-height:calc(100vh - 70px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.35);padding:12px}
+.bktmpop label:first-of-type{margin-top:4px}
+@media(max-width:560px){.bktitle{display:none}}
 .bktitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 18px var(--display)}
 .bkfull>.bkbar{padding:2px 12px 6px}
 .bkhint{margin:0;padding:0 12px 6px;font-size:12px;line-height:1.35}
@@ -154,7 +163,13 @@ body.bkreading .notefab{display:none}
 <section class="card" data-page="tickets"><h2>Free time</h2><div class="row"><span>Rate</span><span id="plRate"></span></div><div class="row"><span>Your points</span><span id="shopPts">0</span></div><div class="row"><span>Free time banked</span><span id="plBank">0m</span></div><label for="plMin">Minutes of free time to buy</label><div class="inline"><input id="plMin" type="number" min="1" max="600" step="1" inputmode="numeric" value="20"><button id="buy" class="mini go" type="button">Convert</button></div><div class="acts" style="margin:8px 0 0"><button class="mini" type="button" data-pm="10">+10</button><button class="mini" type="button" data-pm="30">+30</button><button class="mini" type="button" data-pm="60">+60</button><button class="mini" type="button" data-pm="max">Max</button></div><p id="plCost" class="note" aria-live="polite"></p><div id="lock" class="lock"><small id="lockMsg" class="note"></small><b id="clock">00:00</b></div><button id="play" class="btn" type="button" disabled>Start free time</button><p class="note">Study first, convert points into free minutes, then press Start free time to run the countdown. Pause any time; unused time stays banked. Spend it on anything you enjoy. This page only tracks the time.</p></section>
 <section class="card" id="examCard" data-page="exam"></section>
 <section class="card" id="bookCard" data-page="book"><div id="bkLib"><h2>Book reader</h2><p class="note">Import a PDF to read it here and ask AI about the page you are on. Books are stored on this device; connect Google Drive below to back them up and get them on other devices. Only the text, highlight or picture of the part you ask about is sent to your AI provider.</p><div class="acts" style="margin-top:10px"><label class="mini pick go"><span>Import PDF</span><input id="bkFile" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF book to import"></label></div><p id="rdMsg" class="note" aria-live="polite"></p><div id="bkList"></div><div id="bkDrive"></div></div>
-<div id="bkRead" class="bkfull hide"><div class="bktop"><button id="bkLibBtn" class="mini" type="button">‹ Library</button><strong id="bkTitle" class="bktitle"></strong><button id="bkFs" class="mini" type="button" aria-label="Toggle browser full screen" title="Full screen">⛶</button></div>
+<div id="bkRead" class="bkfull hide"><div class="bktop"><div class="bkl"><button id="bkLibBtn" class="mini" type="button">‹ Library</button><strong id="bkTitle" class="bktitle"></strong></div>
+<div id="bkTm" class="bktm" data-state="idle"><button id="bkTmClock" class="bktmclock" type="button" aria-haspopup="dialog" aria-expanded="false" title="Study timer: tap for options">00:00:00</button><i id="bkTmDot" class="bktmdot hide" aria-hidden="true" title="Check-in waiting"></i><button id="bkTmMain" class="mini go" type="button" aria-label="Start study timer">▶</button><button id="bkTmGear" class="mini" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Study timer options" title="Timer options">⚙</button></div>
+<div class="bkr"><button id="bkFs" class="mini" type="button" aria-label="Toggle browser full screen" title="Full screen">⛶</button></div></div>
+<div id="bkTmPop" class="bktmpop hide" role="dialog" aria-label="Study timer options"><div class="dhead" style="margin-bottom:4px"><strong id="bkTmState">Ready</strong><button id="bkTmX" class="mini" type="button" aria-label="Close timer options">✕</button></div><p id="bkTmInfo" class="note" style="margin:0 0 6px" aria-live="off"></p>
+<div id="bkTmNudge" class="sw-nudge hide"><strong>Still studying?</strong><p id="bkTmNudgeTxt" class="note" style="margin:4px 0 8px"></p><div class="acts" style="margin:0"><button id="bkTmYes" class="mini go" type="button">Yes, keep going</button><button id="bkTmNo" class="mini" type="button">I stopped</button></div></div>
+<label for="bkTmSubj">Subject</label><select id="bkTmSubj"></select><label for="bkTmNote">Topic or details</label><input id="bkTmNote" maxlength="200" autocomplete="off" placeholder="e.g. Chapter 4, Fourier series"><label for="bkTmChk">Check-in every (minutes, 0 = off)</label><input id="bkTmChk" type="number" min="0" max="240" step="5" inputmode="numeric"><p class="note" style="margin:6px 0 0">Check-ins never beep or pop up while you read. A small dot appears next to the timer instead. Subject rates are edited on the Study page (Settings).</p>
+<div class="acts" style="margin:10px 0 0"><button id="bkTmFin" class="mini go" type="button" disabled>Finish and bank points</button><button id="bkTmDisc" class="mini danger hide" type="button">Discard</button></div></div>
 <div class="bkbar" role="toolbar" aria-label="Reader controls"><button id="bkPrev" class="mini" type="button" aria-label="Previous page">‹</button><input id="bkPg" type="number" min="1" inputmode="numeric" enterkeyhint="go" title="Type a page number and press Enter" aria-label="Page number (press Enter to go)"><span id="bkOf" class="note" style="margin:0"></span><button id="bkNext" class="mini" type="button" aria-label="Next page">›</button><button id="bkMark" class="mini" type="button" aria-pressed="false" title="Bookmark this page">🔖</button><button id="bkZo" class="mini" type="button" aria-label="Zoom out">−</button><button id="bkZi" class="mini" type="button" aria-label="Zoom in">+</button><button id="bkSnipBtn" class="mini go" type="button">✂ Snip</button><button id="bkPageImg" class="mini" type="button">📄 Send page</button></div>
 <p id="bkHint" class="note bkhint" aria-live="polite"></p>
 <div class="bkview"><div id="bkStage" class="bkstage"><div id="bkPages"></div></div><div id="bkSnip" class="hide" aria-label="Drag to choose an area to send to the AI"></div></div>
@@ -457,18 +472,18 @@ function swDiscard(){
   if(!swConf){swConf=true;swRenderControls();swConfT=setTimeout(()=>{swConf=false;swRenderControls()},3000);return}
   clearTimeout(swConfT);swConf=false;SW.accMs=0;SW.runStart=null;SW.note='';$('swNote').value='';swCommit();swUnwake()}
 function swSaveNote(){clearTimeout(swNoteT);const v=$('swNote').value.slice(0,200);if(v!==SW.note){SW.note=v;swCommit()}}
-function swSyncNote(){if(document.activeElement!==$('swNote'))$('swNote').value=SW.note||''}
+function swSyncNote(){if(document.activeElement!==$('swNote'))$('swNote').value=SW.note||'';const n=$('bkTmNote');if(n&&document.activeElement!==n)n.value=SW.note||''}
 function swMap(){const m={};SW.sessions.forEach(x=>{m[x.day]=(m[x.day]||0)+x.ms});const l=swLive();if(l>0){const k=swDay(new Date());m[k]=(m[k]||0)+l}return m}
 function swStreak(m){let n=0,i=m[swDay(new Date())]>=60000?0:1;for(;;i++){const d=new Date();d.setDate(d.getDate()-i);if(m[swDay(d)]>=60000)n++;else break}return n}
 function swRenderSelect(){
   const s=$('swSubj');
   s.replaceChildren(...SW.subjects.map(x=>{const o=document.createElement('option');o.value=x.id;o.textContent=x.name+' · '+swFmt(x.rate)+' pts/min';return o}));
-  s.value=SW.subject}
+  s.value=SW.subject;bkTmFill()}
 function swRenderControls(){
   const run=!!SW.runStart,has=swLive()>0,m=$('swMain');
   m.textContent=run?'Pause':has?'Resume':'Start studying';m.className='btn'+(run?' alt':'');
   $('swFinish').disabled=swLive()<1000;$('swDiscard').classList.toggle('hide',!has);$('swDiscard').textContent=swConf?'Tap again to discard':'Discard';
-  $('swSubj').disabled=has;$('swState').textContent=run?'Running':has?'Paused':'Ready';$('swBox').dataset.state=run?'run':has?'pause':'idle'}
+  $('swSubj').disabled=has;$('swState').textContent=run?'Running':has?'Paused':'Ready';$('swBox').dataset.state=run?'run':has?'pause':'idle';bkTmRender()}
 function swRenderSettings(){
   $('swChk').value=String(SW.checkMin);
   const locked=swLive()>0,list=$('swSubjList');list.replaceChildren();
@@ -535,8 +550,32 @@ function swTick(){
   if(SW.runStart&&SW.checkMin>0&&!SW.nextCheck)SW.nextCheck=ms+SW.checkMin*60000;
   const due=!!(SW.runStart&&SW.checkMin>0&&SW.nextCheck&&ms>=SW.nextCheck);
   if(due)$('swNudgeTxt').textContent='If you stopped, tap "I stopped" and the clock goes back to '+swClockStr(SW.nextCheck)+', dropping the time since.';
-  if(due!==swNudgeOn){swNudgeOn=due;$('swNudge').classList.toggle('hide',!due);if(due)swBeep()}}
+  if(due!==swNudgeOn){swNudgeOn=due;$('swNudge').classList.toggle('hide',!due);if(due&&document.body.dataset.view!=='book')swBeep()}bkTmRender()}
+/* ----- Reader header timer: shares the Study timer's state; stays quiet (no beep, popup or animation) while reading ----- */
+function bkTmFill(){const s=$('bkTmSubj');if(!s)return;s.replaceChildren(...SW.subjects.map(x=>{const o=document.createElement('option');o.value=x.id;o.textContent=x.name+' · '+swFmt(x.rate)+' pts/min';return o}));s.value=SW.subject}
+function bkTmIsOpen(){const p=$('bkTmPop');return !!p&&!p.classList.contains('hide')}
+function bkTmPos(){const p=$('bkTmPop'),r=$('bkTm').getBoundingClientRect(),w=p.offsetWidth;p.style.top=(r.bottom+6)+'px';p.style.left=Math.max(8,Math.min(r.left+r.width/2-w/2,innerWidth-w-8))+'px'}
+function bkTmOpen(on){const p=$('bkTmPop');if(!p)return;p.classList.toggle('hide',!on);$('bkTmClock').setAttribute('aria-expanded',String(!!on));$('bkTmGear').setAttribute('aria-expanded',String(!!on));if(on){bkTmFill();if(document.activeElement!==$('bkTmNote'))$('bkTmNote').value=SW.note||'';$('bkTmChk').value=String(SW.checkMin);bkTmPos();bkTmRender()}}
+function bkTmRender(){const c=$('bkTmClock');if(!c)return;const ms=swLive(),run=!!SW.runStart,has=ms>0,st=run?'run':has?'pause':'idle',t=swClockStr(ms);
+if(c.textContent!==t)c.textContent=t;const box=$('bkTm');if(box.dataset.state!==st)box.dataset.state=st;
+const m=$('bkTmMain'),lab=run?'⏸':'▶',al=run?'Pause study timer':has?'Resume study timer':'Start study timer';if(m.textContent!==lab)m.textContent=lab;if(m.getAttribute('aria-label')!==al)m.setAttribute('aria-label',al);
+$('bkTmDot').classList.toggle('hide',!swNudgeOn);
+if(!bkTmIsOpen())return;
+$('bkTmState').textContent=run?'Running':has?'Paused':'Ready';
+$('bkTmInfo').textContent=swMsg||(ms<1000?'Earn '+swFmt(swCur().rate)+' pts per minute on '+swCur().name+'.':'+'+swFmt(swPts(ms))+' pts so far. Added to your total when you finish.');
+$('bkTmNudge').classList.toggle('hide',!swNudgeOn);if(swNudgeOn)$('bkTmNudgeTxt').textContent=$('swNudgeTxt').textContent;
+$('bkTmFin').disabled=ms<1000;$('bkTmDisc').classList.toggle('hide',!has);$('bkTmDisc').textContent=swConf?'Tap again to discard':'Discard';$('bkTmSubj').disabled=has}
+function bkTmInit(){
+  $('bkTmMain').onclick=()=>SW.runStart?swPause():swStart();
+  $('bkTmClock').onclick=()=>bkTmOpen(!bkTmIsOpen());$('bkTmGear').onclick=()=>bkTmOpen(!bkTmIsOpen());$('bkTmX').onclick=()=>bkTmOpen(false);
+  $('bkTmSubj').onchange=()=>{SW.subject=$('bkTmSubj').value;swCommit()};
+  $('bkTmNote').oninput=()=>{$('swNote').value=$('bkTmNote').value;$('swNote').dispatchEvent(new Event('input'))};
+  $('bkTmChk').onchange=()=>{$('swChk').value=$('bkTmChk').value;$('swChk').onchange();$('bkTmChk').value=String(SW.checkMin)};
+  $('bkTmFin').onclick=swFinish;$('bkTmDisc').onclick=swDiscard;$('bkTmYes').onclick=()=>$('swYes').click();$('bkTmNo').onclick=()=>$('swNo').click();
+  document.addEventListener('click',e=>{if(bkTmIsOpen()&&!e.target.closest('#bkTmPop,#bkTm'))bkTmOpen(false)});
+  addEventListener('resize',()=>{if(bkTmIsOpen())bkTmPos()});bkTmFill();bkTmRender()}
 function swInit(){
+  bkTmInit();
   $('swMain').onclick=()=>SW.runStart?swPause():swStart();
   $('swFinish').onclick=swFinish;$('swDiscard').onclick=swDiscard;
   $('swSubj').onchange=()=>{SW.subject=$('swSubj').value;swCommit()};
@@ -698,7 +737,7 @@ function syncInit(){
   renderProfile();if(wanted())loadFB().catch(e=>setSync(fbErr(e)))}
 const VIEWS=['study','log','weak','tickets','profile','ai','exam','book'];
 function closeMenu(){$('menuPanel').classList.add('hide');$('menuBtn').setAttribute('aria-expanded','false')}
-function setView(v,keep){if(!VIEWS.includes(v))v='study';document.body.dataset.view=v;if(v==='weak')renderWeak();if(v==='profile')renderProfile();if(v==='exam')exRender();if(v==='book')bookEnter();else{bkSnipStop();bkSheet(false)}bkLock();$('chatFab').textContent=v==='exam'?'💬 Ask about exam':'💬 Ask AI';if($('chatPanel').classList.contains('open'))renderChat();closeMenu();document.querySelectorAll('#menuPanel button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===v?'page':'false'));$('menuBtn').textContent='☰ '+({book:'Book reader',exam:'Exam mode',study:'Study',log:'Study log',weak:'Weak spots',tickets:'Free time',profile:'Profile and sync',ai:'AI settings'})[v];if(!keep){try{history.replaceState(null,'',v==='study'?location.pathname+location.search:'#'+v)}catch{}window.scrollTo(0,0)}}
+function setView(v,keep){if(!VIEWS.includes(v))v='study';document.body.dataset.view=v;if(v==='weak')renderWeak();if(v==='profile')renderProfile();if(v==='exam')exRender();if(v==='book')bookEnter();else{bkSnipStop();bkSheet(false);bkTmOpen(false)}bkLock();$('chatFab').textContent=v==='exam'?'💬 Ask about exam':'💬 Ask AI';if($('chatPanel').classList.contains('open'))renderChat();closeMenu();document.querySelectorAll('#menuPanel button').forEach(b=>b.setAttribute('aria-current',b.dataset.view===v?'page':'false'));$('menuBtn').textContent='☰ '+({book:'Book reader',exam:'Exam mode',study:'Study',log:'Study log',weak:'Weak spots',tickets:'Free time',profile:'Profile and sync',ai:'AI settings'})[v];if(!keep){try{history.replaceState(null,'',v==='study'?location.pathname+location.search:'#'+v)}catch{}window.scrollTo(0,0)}}
 $('menuBtn').onclick=()=>{let hidden=$('menuPanel').classList.toggle('hide');$('menuBtn').setAttribute('aria-expanded',String(!hidden))};
 document.querySelectorAll('#menuPanel button').forEach(b=>b.onclick=()=>setView(b.dataset.view));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('menuPanel').classList.contains('hide')){closeMenu();$('menuBtn').focus()}});
@@ -959,7 +998,7 @@ try{const p1=await doc.getPage(1),v=p1.getViewport({scale:1});bkDims=[null,{w:v.
 if(bkPdf!==doc)return;
 $('bkLib').classList.add('hide');$('bkRead').classList.remove('hide');$('bkTitle').textContent=m.name;$('bkSub').textContent=m.name;$('bkPg').max=m.pages;bkSay('');bkRenderChat();bkRenderSel();bkRenderAtt();bkRenderRep();bkLock();window.scrollTo(0,0);bkBuild();bkPageUi();bkRenderMarks()}
 function bkReset(){bkTok++;bkGen++;if(bkIO){bkIO.disconnect();bkIO=null}for(const t of bkTasks.values()){try{t.cancel()}catch(e){}}bkTasks.clear();bkSt.clear();if(bkPdf){try{bkPdf.destroy()}catch(e){}}bkPdf=null;bkWraps=[];$('bkPages').replaceChildren()}
-function bkClose(){bmView=null;bmRen=null;bmRenF=null;bkSnipStop();bkSheet(false);bkMarks(false);try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}catch(e){}bkReset();bkCur=null;bkSel='';bkImg=null;$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkLock();bkRenderList()}
+function bkClose(){bkTmOpen(false);bmView=null;bmRen=null;bmRenF=null;bkSnipStop();bkSheet(false);bkMarks(false);try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}catch(e){}bkReset();bkCur=null;bkSel='';bkImg=null;$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkLock();bkRenderList()}
 function bkLock(){document.body.classList.toggle('bkreading',document.body.dataset.view==='book'&&!!bkCur)}
 function bkBuild(){const fr=document.createDocumentFragment();bkWraps=[];for(let n=1;n<=bkCur.pages;n++){const w=document.createElement('div');w.className='bkpg';w.dataset.n=n;fr.append(w);bkWraps.push(w)}$('bkPages').replaceChildren(fr);bkLayoutAll();bkDimLoop(bkTok);bkHint(bkHintTxt)}
 /* ----- page rendering and text ----- */
@@ -1098,7 +1137,7 @@ $('bkSend').onclick=bkSend;$('bkClear').onclick=()=>{if(bkBusy||!bkCur)return;bk
 $('bkIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();bkSend()}});
 $('bkNear').onchange=()=>{BSET.near=bclamp(bnum($('bkNear').value,1),0,2);bkSaveSet()};$('bkAuto').onchange=()=>{BSET.auto=$('bkAuto').checked;bkSaveSet()};
 $('bkMk').onclick=()=>{if(!bkCur)return;const last=(bkChats[bkCur.id]||[]).slice().reverse().find(m=>m.role==='model');bkCardDialog(bkSel?{sel:bkSel,page:(bkSelPage||bkPage),img:bkImg}:last?{text:last.text,page:last.page,img:last.srcImg}:{page:bkPage,img:bkImg})};
-document.addEventListener('keydown',e=>{if(document.body.dataset.view!=='book')return;if(e.key==='Escape'){if(bkSnipOn)bkSnipStop();else if($('bkChat').classList.contains('open'))bkSheet(false);else if($('bkMarks').classList.contains('open'))bkMarks(false);return}
+document.addEventListener('keydown',e=>{if(document.body.dataset.view!=='book')return;if(e.key==='Escape'){if(bkTmIsOpen())bkTmOpen(false);else if(bkSnipOn)bkSnipStop();else if($('bkChat').classList.contains('open'))bkSheet(false);else if($('bkMarks').classList.contains('open'))bkMarks(false);return}
 const tg=document.activeElement&&document.activeElement.tagName;if(/INPUT|TEXTAREA|SELECT/.test(tg||''))return;if(e.key==='ArrowLeft')bkGo(bkPage-1);else if(e.key==='ArrowRight')bkGo(bkPage+1)});
 let bkRT;addEventListener('resize',()=>{clearTimeout(bkRT);bkRT=setTimeout(()=>{if(document.body.dataset.view==='book'&&bkPdf&&bkCur&&Math.abs($('bkStage').clientWidth-bkLastW)>12)bkLayoutAll()},250)});
 function bookEnter(){$('bkNear').value=String(bclamp(bnum(BSET.near,1),0,2));$('bkAuto').checked=!!BSET.auto;if(bkCur&&bkPdf){$('bkLib').classList.add('hide');$('bkRead').classList.remove('hide');bkRenderChat();bkLayoutAll()}else{$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkRenderList()}}
