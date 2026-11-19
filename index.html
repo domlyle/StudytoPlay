@@ -110,7 +110,16 @@ body.bkreading{overflow:hidden}
 .bkmbox{width:min(520px,100%);margin:auto}
 .bkmbox textarea{min-height:84px}
 @media(min-width:900px){.bkfull.chatopen>.bktop,.bkfull.chatopen>.bkbar,.bkfull.chatopen>.bkhint,.bkfull.chatopen>.bkview{margin-right:var(--bkpw)}}
-@media(prefers-reduced-motion:reduce){.bkchat{transition:none}}
+.bkfull{--bkmw:min(340px,100vw)}
+.bkmarks{position:fixed;top:0;left:0;bottom:0;width:var(--bkmw);z-index:55;display:flex;flex-direction:column;min-height:0;background:var(--surface);border-right:1px solid var(--line);box-shadow:6px 0 24px rgba(0,0,0,.35);transform:translateX(-105%);visibility:hidden;transition:transform .25s,visibility 0s .25s}
+.bkmarks.open{transform:none;visibility:visible;transition:transform .25s}
+.bkmfab{right:auto;left:14px;background:var(--accent);color:var(--accentfg)}
+.bkfull.markopen .bkmfab{display:none}
+body.bkreading .notefab{display:none}
+.bkhint:empty{display:none}
+#bkMark[aria-pressed=true]{background:var(--accent);color:var(--accentfg);border-color:var(--accent)}
+@media(min-width:900px){.bkfull.markopen>.bktop,.bkfull.markopen>.bkbar,.bkfull.markopen>.bkhint,.bkfull.markopen>.bkview{margin-left:var(--bkmw)}}
+@media(prefers-reduced-motion:reduce){.bkchat,.bkmarks{transition:none}}
 </style></head>
 <body><main>
 <div class="top"><div><h1>StudyRank</h1><span>Solve problems. Earn points. Earn your free time.</span></div><button id="menuBtn" class="mini" type="button" aria-expanded="false" aria-controls="menuPanel">☰ Menu</button></div>
@@ -145,10 +154,12 @@ body.bkreading{overflow:hidden}
 <section class="card" id="examCard" data-page="exam"></section>
 <section class="card" id="bookCard" data-page="book"><div id="bkLib"><h2>Book reader</h2><p class="note">Import a PDF to read it here and ask AI about the page you are on. Books are stored only on this device (they are not part of backups or sync). Only the text, highlight or picture of the part you ask about is sent to your AI provider.</p><div class="acts" style="margin-top:10px"><label class="mini pick go"><span>Import PDF</span><input id="bkFile" type="file" accept="application/pdf,.pdf" aria-label="Choose a PDF book to import"></label></div><p id="rdMsg" class="note" aria-live="polite"></p><div id="bkList"></div></div>
 <div id="bkRead" class="bkfull hide"><div class="bktop"><button id="bkLibBtn" class="mini" type="button">‹ Library</button><strong id="bkTitle" class="bktitle"></strong><button id="bkFs" class="mini" type="button" aria-label="Toggle browser full screen" title="Full screen">⛶</button></div>
-<div class="bkbar" role="toolbar" aria-label="Reader controls"><button id="bkPrev" class="mini" type="button" aria-label="Previous page">‹</button><input id="bkPg" type="number" min="1" inputmode="numeric" aria-label="Page number"><span id="bkOf" class="note" style="margin:0"></span><button id="bkNext" class="mini" type="button" aria-label="Next page">›</button><button id="bkGoBtn" class="mini go" type="button">Go to page</button><button id="bkZo" class="mini" type="button" aria-label="Zoom out">−</button><button id="bkZi" class="mini" type="button" aria-label="Zoom in">+</button><button id="bkSnipBtn" class="mini go" type="button">✂ Snip</button><button id="bkPageImg" class="mini" type="button">📄 Send page</button></div>
+<div class="bkbar" role="toolbar" aria-label="Reader controls"><button id="bkPrev" class="mini" type="button" aria-label="Previous page">‹</button><input id="bkPg" type="number" min="1" inputmode="numeric" enterkeyhint="go" title="Type a page number and press Enter" aria-label="Page number (press Enter to go)"><span id="bkOf" class="note" style="margin:0"></span><button id="bkNext" class="mini" type="button" aria-label="Next page">›</button><button id="bkMark" class="mini" type="button" aria-pressed="false" title="Bookmark this page">🔖</button><button id="bkZo" class="mini" type="button" aria-label="Zoom out">−</button><button id="bkZi" class="mini" type="button" aria-label="Zoom in">+</button><button id="bkSnipBtn" class="mini go" type="button">✂ Snip</button><button id="bkPageImg" class="mini" type="button">📄 Send page</button></div>
 <p id="bkHint" class="note bkhint" aria-live="polite"></p>
 <div class="bkview"><div id="bkStage" class="bkstage"><div id="bkPages"></div></div><div id="bkSnip" class="hide" aria-label="Drag to choose an area to send to the AI"></div></div>
 <button id="bkFab" class="chatfab bkfab" type="button" aria-controls="bkChat" aria-expanded="false">💬 Ask AI</button>
+<button id="bkMarkFab" class="chatfab bkfab bkmfab" type="button" aria-controls="bkMarks" aria-expanded="false">🔖 Bookmarks</button>
+<aside id="bkMarks" class="bkmarks" aria-label="Bookmarks and notes"><div class="chathead"><div><strong>Bookmarks and notes</strong><small id="bkMarkSub"></small></div><div class="acts" style="margin:0"><button id="bkMarkClose" class="mini" type="button" aria-label="Close bookmarks">✕</button></div></div><div class="notebar"><button id="bkMarkAdd" class="btn" type="button" style="margin:0">+ Bookmark this page</button></div><div id="bkMarkList" class="notelist"></div></aside>
 <aside id="bkChat" class="bkchat" aria-label="Book AI chat"><div class="chathead"><div><strong>Ask AI about this book</strong><small id="bkSub"></small></div><div class="acts" style="margin:0"><button class="aichip" data-aichip type="button"></button><button id="bkClear" class="mini" type="button">Clear</button><button id="bkClose" class="mini" type="button" aria-label="Close chat">✕</button></div></div>
 <div id="bkLog" class="chatlog" role="log" aria-live="polite"></div><div id="bkRep" class="chatatt hide"></div><div id="bkSel" class="chatatt hide"></div><div id="bkAtt" class="chatatt hide"></div>
 <div class="chatform"><textarea id="bkIn" rows="2" maxlength="1500" placeholder="Ask about this page…" aria-label="Your question"></textarea><button id="bkSend" class="mini go" type="button">Send</button></div>
@@ -544,7 +555,7 @@ function copyText(t){const old=()=>{const ta=document.createElement('textarea');
 function flash(b,t){const o=b.dataset.o||b.textContent;b.dataset.o=o;b.textContent=t;clearTimeout(b._t);b._t=setTimeout(()=>{b.textContent=o},1300)}
 const cardRef=c=>c?{cid:c.id,dn:c.dn||(find(c.id)?find(c.id).dk.name:''),src:plain(c.q).replace(/\s+/g,' ').trim().slice(0,80)}:{cid:'',dn:'',src:''};
 function addNote(text,card){NOTES.unshift({id:id(),t:String(text).slice(0,10000),...cardRef(card),ts:Date.now(),up:Date.now()});saveNotes();renderNotes()}
-function renderNotes(){const box=$('noteList');if(!box)return;box.replaceChildren();const q=noteQ.trim().toLowerCase(),list=NOTES.filter(n=>!q||(n.t+' '+n.src).toLowerCase().includes(q));$('noteSub').textContent=NOTES.length+(NOTES.length===1?' note':' notes');
+function renderNotes(){try{bkRenderMarks()}catch(e){}const box=$('noteList');if(!box)return;box.replaceChildren();const q=noteQ.trim().toLowerCase(),list=NOTES.filter(n=>!q||(n.t+' '+n.src).toLowerCase().includes(q));$('noteSub').textContent=NOTES.length+(NOTES.length===1?' note':' notes');
 if(!list.length){const p=document.createElement('p');p.className='note';p.textContent=NOTES.length?'No notes match your search.':'No notes yet. Tap 📝 beside an AI answer, or press + New.';box.append(p);return}
 for(const n of list){const it=document.createElement('div');it.className='nitem';const meta=document.createElement('p');meta.className='note';meta.style.margin='0 0 6px';const hit=n.cid?find(n.cid):null,dnNow=hit?hit.dk.name:n.dn;meta.textContent=(dnNow?disp(dnNow):'No deck')+(n.src?' › '+n.src:'')+(n.cid&&!hit?' (card deleted)':'')+' · '+new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});it.append(meta);
 if(noteEdit===n.id){const ta=document.createElement('textarea');ta.value=n.t;ta.maxLength=10000;ta.setAttribute('aria-label','Note text');it.append(ta);
@@ -817,18 +828,50 @@ const bnum=(v,d)=>isFinite(Number(v))&&v!==null&&v!==''?Number(v):d,bclamp=(v,a,
 function bkClean(a){if(!Array.isArray(a))return[];return a.filter(b=>b&&b.id&&typeof b.name==='string').slice(0,100).map(b=>({id:String(b.id).slice(0,60),name:b.name.slice(0,150),pages:bnum(b.pages,0),page:Math.max(1,bnum(b.page,1)),size:bnum(b.size,0),t:bnum(b.t,Date.now())}))}
 let BOOKS=bkClean(safeGet(BKK)),BSET=Object.assign({auto:true,near:1},safeGet(BKS)||{});
 const bkSave=()=>safeSet(BKK,BOOKS),bkSaveSet=()=>safeSet(BKS,BSET);
+let bkHintT=null,bmFocus=null,BMK=cleanBm(safeGet('sr.bookmarks'));
+function cleanBm(a){if(!Array.isArray(a))return[];return a.filter(x=>x&&x.id&&x.bid&&isFinite(Number(x.page))).slice(0,3000).map(x=>({id:String(x.id),bid:String(x.bid),page:Math.max(1,Math.round(Number(x.page))),label:String(x.label||'').slice(0,80),note:String(x.note||'').slice(0,3000),ts:bnum(x.ts,Date.now())}))}
+const bmSave=()=>safeSet('sr.bookmarks',BMK),bmHere=()=>bkCur?BMK.find(x=>x.bid===bkCur.id&&x.page===bkPage):null;
+function bmAdd(page){let h=BMK.find(x=>bkCur&&x.bid===bkCur.id&&x.page===page);if(!h){h={id:id(),bid:bkCur.id,page,label:'',note:'',ts:Date.now()};BMK.push(h);bmSave()}return h}
+function bkMarkUi(){if(!bkCur)return;const h=bmHere(),b=$('bkMark'),a=$('bkMarkAdd');if(b){b.setAttribute('aria-pressed',String(!!h));b.textContent=h?'🔖 ✓':'🔖';b.title=h?'This page is bookmarked (tap to open its note)':'Bookmark this page'}if(a){a.disabled=!!h;a.textContent=h?'🔖 Page '+bkPage+' is bookmarked':'+ Bookmark page '+bkPage}}
+function bkMarks(open){const p=$('bkMarks'),r=$('bkRead');if(!p)return;const was=p.classList.contains('open');if(open&&innerWidth<900&&$('bkChat').classList.contains('open'))bkSheet(false);p.classList.toggle('open',!!open);r.classList.toggle('markopen',!!open);$('bkMarkFab').setAttribute('aria-expanded',String(!!open));if(open)bkRenderMarks();bkMarkUi();if(!!open!==was&&innerWidth>=900)setTimeout(()=>{if(bkPdf&&Math.abs($('bkStage').clientWidth-bkLastW)>12)bkLayoutAll()},0)}
+function bkRenderMarks(){if(!bkCur||!$('bkMarks').classList.contains('open'))return;const box=$('bkMarkList'),keep=box.scrollTop;box.replaceChildren();$('bkMarkSub').textContent=bkCur.name;
+const mk=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e};
+const h1=mk('h2','','Bookmarks');h1.style.margin='4px 0 6px';box.append(h1);
+const list=BMK.filter(x=>x.bid===bkCur.id).sort((p,q)=>p.page-q.page);
+if(!list.length)box.append(mk('p','note','No bookmarks yet. Tap 🔖 in the toolbar, or the button above, to bookmark the page you are on.'));
+let focusEl=null;
+for(const x of list){const it=mk('div','nitem'),head=mk('div','row');
+ const go=button('Page '+x.page,()=>{bkGo(x.page,true);if(innerWidth<900)bkMarks(false)},'go');
+ const lab=document.createElement('input');lab.value=x.label;lab.maxLength=80;lab.placeholder='Title (optional)';lab.setAttribute('aria-label','Bookmark title');lab.style.cssText='flex:1;min-width:0';lab.onchange=()=>{x.label=lab.value.trim();bmSave()};
+ head.append(go,lab);
+ const ta=document.createElement('textarea');ta.value=x.note;ta.maxLength=3000;ta.placeholder='Note about this page…';ta.setAttribute('aria-label','Bookmark note');ta.style.cssText='min-height:70px;margin-top:8px';ta.onchange=()=>{x.note=ta.value.trim();bmSave()};
+ const a=mk('div','acts');
+ const toN=button('Copy to Notes',()=>{const t=((x.label?x.label+'\n':'')+(ta.value.trim())).trim();if(!t){flash(toN,'Write a note first');return}x.note=ta.value.trim();bmSave();bkNote(t,x.page);flash(toN,'Saved ✓')});
+ const del=button('Delete',()=>{},'danger');confirmDelete(del,'Delete',()=>{BMK=BMK.filter(y=>y!==x);bmSave();bkMarkUi();bkRenderMarks()});
+ a.append(toN,del);it.append(head,ta,a);box.append(it);if(bmFocus===x.id)focusEl=[it,ta]}
+const h2=mk('h2','','Notes from this book');h2.style.margin='18px 0 6px';box.append(h2);
+const pre=(bkCur.name+' p.').slice(0,115),ns=NOTES.filter(n=>n.src&&n.src.startsWith(pre));
+if(!ns.length)box.append(mk('p','note','Notes you save from the AI chat or from highlighted text show up here.'));
+for(const n of ns.slice(0,100)){const it=mk('div','nitem'),pg=/p\.(\d+)\s*$/.exec(n.src);
+ it.append(mk('p','note',(pg?'Page '+pg[1]:n.src)+' · '+new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})));
+ const body=mk('div','fulltext');body.style.cssText='max-height:150px;overflow:auto';rich(body,n.t);it.append(body);
+ const a=mk('div','acts');if(pg)a.append(button('Go to page',()=>{bkGo(+pg[1],true);if(innerWidth<900)bkMarks(false)},'go'));
+ const cp=button('Copy',()=>copyText(n.t).then(()=>flash(cp,'Copied ✓')).catch(()=>flash(cp,'Failed')));a.append(cp);it.append(a);box.append(it)}
+box.scrollTop=keep;
+if(focusEl){const[it,ta]=focusEl;bmFocus=null;requestAnimationFrame(()=>{it.scrollIntoView({block:'nearest'});ta.focus({preventScroll:true})})}}
+
 let bkDbP;
 function bkDb(){return bkDbP||(bkDbP=new Promise((ok,no)=>{try{const r=indexedDB.open('studyrank-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>ok(r.result);r.onerror=()=>{bkDbP=null;no(r.error)}}catch(e){bkDbP=null;no(e)}}))}
 function bkOp(mode,fn){return bkDb().then(db=>new Promise((ok,no)=>{const t=db.transaction('files',mode),st=t.objectStore('files');let out;const rq=fn(st);if(rq)rq.onsuccess=()=>{out=rq.result};t.oncomplete=()=>ok(out);t.onerror=t.onabort=()=>no(t.error)}))}
-let bkCur=null,bkPdf=null,bkPage=1,bkFrac=-.01,bkZoom=1,bkTok=0,bkGen=0,bkScale=1,bkLastW=0,bkSel='',bkSelPage=0,bkImg=null,bkImgPage=0,bkBusy=false,bkSnipOn=false,bkReply=null,bkHintTxt='Scroll to read. Select text to highlight it for the AI, or tap ✂ Snip and drag over any area to send it as a picture. Pages without text are sent as pictures.',pdfP,bkMeasure,bkDims=[],bkWraps=[],bkIO=null,bkRaf=0,bkSaveT=null;
+let bkCur=null,bkPdf=null,bkPage=1,bkFrac=-.01,bkZoom=1,bkTok=0,bkGen=0,bkScale=1,bkLastW=0,bkSel='',bkSelPage=0,bkImg=null,bkImgPage=0,bkBusy=false,bkSnipOn=false,bkReply=null,bkHintTxt='',pdfP,bkMeasure,bkDims=[],bkWraps=[],bkIO=null,bkRaf=0,bkSaveT=null;
 const bkTasks=new Map(),bkSt=new Map();
 const bkText=new Map(),bkChats={};
-const bkSay=t=>{const m=$('rdMsg');if(m)m.textContent=t||''},bkHint=t=>{const m=$('bkHint');if(m)m.textContent=t||''};
+const bkSay=t=>{const m=$('rdMsg');if(m)m.textContent=t||''},bkHint=t=>{const m=$('bkHint');if(!m)return;m.textContent=t||'';clearTimeout(bkHintT);if(t&&!bkSnipOn)bkHintT=setTimeout(()=>{m.textContent=''},5000)};
 function bkLoadLib(){const g=()=>window.pdfjsLib||window['pdfjs-dist/build/pdf'];if(g()){try{g().GlobalWorkerOptions.workerSrc=PDF_WK}catch(e){}return Promise.resolve(g())}return pdfP||(pdfP=new Promise((ok,no)=>{const s=document.createElement('script');s.src=PDF_JS;s.async=true;s.onload=()=>{const l=g();if(l){l.GlobalWorkerOptions.workerSrc=PDF_WK;ok(l)}else{pdfP=null;no(Error('pdfjs'))}};s.onerror=()=>{pdfP=null;s.remove();no(Error('pdfjs'))};document.head.append(s)}))}
 /* ----- library ----- */
 function bkRenderList(){const box=$('bkList');box.replaceChildren();if(!BOOKS.length){const p=document.createElement('p');p.className='note';p.textContent='No books yet. Tap Import PDF.';box.append(p);return}
 for(const b of BOOKS.slice().sort((x,y)=>y.t-x.t)){const row=document.createElement('div');row.className='srow';const p=document.createElement('p');p.textContent=b.name;const s=document.createElement('p');s.className='note';s.textContent=(b.pages?b.pages+' pages · ':'')+(b.size/1048576).toFixed(1)+' MB'+(b.pages?' · page '+Math.min(b.page,b.pages):'');const a=document.createElement('div');a.className='acts';const del=button('Delete',()=>{},'danger');confirmDelete(del,'Delete',()=>bkDelete(b));a.append(button('Open',()=>bkOpen(b),'go'),del);row.append(p,s,a);box.append(row)}}
-async function bkDelete(b,quiet){try{await bkOp('readwrite',st=>st.delete(b.id))}catch(e){}BOOKS=BOOKS.filter(x=>x.id!==b.id);delete bkChats[b.id];if(bkCur&&bkCur.id===b.id)bkClose();bkSave();bkRenderList();if(!quiet)bkSay('Book deleted from this device.')}
+async function bkDelete(b,quiet){try{await bkOp('readwrite',st=>st.delete(b.id))}catch(e){}BOOKS=BOOKS.filter(x=>x.id!==b.id);BMK=BMK.filter(x=>x.bid!==b.id);bmSave();delete bkChats[b.id];if(bkCur&&bkCur.id===b.id)bkClose();bkSave();bkRenderList();if(!quiet)bkSay('Book deleted from this device.')}
 $('bkFile').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;if(!/\.pdf$/i.test(f.name)&&f.type!=='application/pdf'){bkSay('That is not a PDF file.');return}
 if(f.size>250*1048576){bkSay('That PDF is over 250 MB. Split it into smaller parts first.');return}
 bkSay('Saving to this device…');const bid=id();
@@ -842,9 +885,9 @@ bkReset();
 bkPdf=doc;bkCur=m;m.pages=doc.numPages;m.t=Date.now();bkPage=bclamp(m.page||1,1,m.pages);bkFrac=-.01;bkText.clear();bkSel='';bkSelPage=0;bkImg=null;bkImgPage=0;bkReply=null;bkSave();bkSnipStop();
 try{const p1=await doc.getPage(1),v=p1.getViewport({scale:1});bkDims=[null,{w:v.width,h:v.height}]}catch(e){bkDims=[null,{w:612,h:792}]}
 if(bkPdf!==doc)return;
-$('bkLib').classList.add('hide');$('bkRead').classList.remove('hide');$('bkTitle').textContent=m.name;$('bkSub').textContent=m.name;$('bkPg').max=m.pages;bkSay('');bkRenderChat();bkRenderSel();bkRenderAtt();bkRenderRep();bkLock();window.scrollTo(0,0);bkBuild();bkPageUi()}
+$('bkLib').classList.add('hide');$('bkRead').classList.remove('hide');$('bkTitle').textContent=m.name;$('bkSub').textContent=m.name;$('bkPg').max=m.pages;bkSay('');bkRenderChat();bkRenderSel();bkRenderAtt();bkRenderRep();bkLock();window.scrollTo(0,0);bkBuild();bkPageUi();bkRenderMarks()}
 function bkReset(){bkTok++;bkGen++;if(bkIO){bkIO.disconnect();bkIO=null}for(const t of bkTasks.values()){try{t.cancel()}catch(e){}}bkTasks.clear();bkSt.clear();if(bkPdf){try{bkPdf.destroy()}catch(e){}}bkPdf=null;bkWraps=[];$('bkPages').replaceChildren()}
-function bkClose(){bkSnipStop();bkSheet(false);try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}catch(e){}bkReset();bkCur=null;bkSel='';bkImg=null;$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkLock();bkRenderList()}
+function bkClose(){bkSnipStop();bkSheet(false);bkMarks(false);try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}catch(e){}bkReset();bkCur=null;bkSel='';bkImg=null;$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkLock();bkRenderList()}
 function bkLock(){document.body.classList.toggle('bkreading',document.body.dataset.view==='book'&&!!bkCur)}
 function bkBuild(){const fr=document.createDocumentFragment();bkWraps=[];for(let n=1;n<=bkCur.pages;n++){const w=document.createElement('div');w.className='bkpg';w.dataset.n=n;fr.append(w);bkWraps.push(w)}$('bkPages').replaceChildren(fr);bkLayoutAll();bkDimLoop(bkTok);bkHint(bkHintTxt)}
 /* ----- page rendering and text ----- */
@@ -855,7 +898,7 @@ function bkTextLayer(tc,vp){const tl=document.createElement('div');tl.className=
 for(const it of tc.items){if(typeof it.str!=='string')continue;if(it.str){const m=bkMul(vp.transform,it.transform),fh=Math.hypot(m[2],m[3]);if(fh>0&&isFinite(fh)){const sp=document.createElement('span');sp.textContent=it.str;sp.style.left=m[4]+'px';sp.style.top=(m[5]-fh)+'px';sp.style.fontSize=fh+'px';bkMeasure.font=fh+'px sans-serif';const mw=bkMeasure.measureText(it.str).width,w=(it.width||0)*vp.scale,sx=mw>0&&w>0?w/mw:1,ang=Math.atan2(m[1],m[0]);sp.style.transform='rotate('+ang+'rad) scaleX('+sx+')';frag.append(sp)}}if(it.hasEOL)frag.append(document.createElement('br'))}
 tl.append(frag);return tl}
 async function bkPageText(n){if(!bkPdf||n<1||n>bkPdf.numPages)return'';if(bkText.has(n))return bkText.get(n);try{const p=await bkPdf.getPage(n),t=bkTcText(await p.getTextContent());if(bkText.size>80)bkText.delete(bkText.keys().next().value);bkText.set(n,t);return t}catch(e){return''}}
-function bkPageUi(){if(!bkCur)return;const pg=$('bkPg');if(document.activeElement!==pg)pg.value=bkPage;$('bkOf').textContent='/ '+bkCur.pages;$('bkPrev').disabled=bkPage<=1;$('bkNext').disabled=bkPage>=bkCur.pages}
+function bkPageUi(){if(!bkCur)return;const pg=$('bkPg');if(document.activeElement!==pg)pg.value=bkPage;$('bkOf').textContent='/ '+bkCur.pages;$('bkPrev').disabled=bkPage<=1;$('bkNext').disabled=bkPage>=bkCur.pages;bkMarkUi()}
 const bkDimOf=n=>bkDims[n]||bkDims[1];
 function bkSizeWrap(n){const w=bkWraps[n-1],d=bkDimOf(n);if(!w||!d)return;w.style.width=Math.round(d.w*bkScale)+'px';w.style.height=Math.round(d.h*bkScale)+'px'}
 function bkAdjust(n){const w=bkWraps[n-1],st=$('bkStage');if(!w)return;const top=w.offsetTop,oh=w.offsetHeight;bkSizeWrap(n);const nh=w.offsetHeight;if(nh!==oh&&top+oh<=st.scrollTop+1)st.scrollTop+=nh-oh}
@@ -891,7 +934,7 @@ function bkRenderSel(){const box=$('bkSel');box.replaceChildren();box.classList.
 function bkRenderAtt(){const box=$('bkAtt');box.replaceChildren();box.classList.toggle('hide',!bkImg);if(!bkImg)return;const im=document.createElement('img');im.alt='Picture to send';im.src='data:'+bkImg.mime_type+';base64,'+bkImg.data;im.onclick=()=>lightbox(im.src);const t=document.createElement('span');t.className='note';t.textContent='Picture will be sent with your question';box.append(im,t,button('🃏',()=>bkCardDialog({img:bkImg,page:bkImgPage||bkPage})),button('Remove',()=>{bkImg=null;bkRenderAtt()},'danger'))}
 function bkRenderRep(){const box=$('bkRep');box.replaceChildren();box.classList.toggle('hide',!bkReply);if(!bkReply)return;const t=document.createElement('span');t.className='note';t.textContent='↩ Replying to: '+plain(bkReply.text).replace(/\s+/g,' ').slice(0,90);box.append(t,button('Remove',()=>{bkReply=null;bkRenderRep()},'danger'))}
 /* ----- snip tool: drag a box over the page, it is re-drawn sharply and sent to the AI ----- */
-function bkSnipStart(){if(!bkPdf||bkSnipOn)return;bkSnipOn=true;$('bkSnip').classList.remove('hide');$('bkSnipBtn').textContent='Cancel snip';bkHint('Drag over the part of the page to send to the AI. Esc cancels.');bkSheet(false)}
+function bkSnipStart(){if(!bkPdf||bkSnipOn)return;bkSnipOn=true;$('bkSnip').classList.remove('hide');$('bkSnipBtn').textContent='Cancel snip';bkHint('Drag over the part of the page to send to the AI. Esc cancels.');bkSheet(false);if(innerWidth<900)bkMarks(false)}
 function bkSnipStop(){bkSnipOn=false;const o=$('bkSnip');if(o){o.classList.add('hide');o.replaceChildren()}const b=$('bkSnipBtn');if(b)b.textContent='✂ Snip';bkHint(bkHintTxt)}
 async function bkGrab(r,n){n=n||bkPage;const page=await bkPdf.getPage(n),pg=bkWraps[n-1];if(!r)r={x:0,y:0,w:pg.clientWidth,h:pg.clientHeight};
 const maxPx=prov==='nvidia'?1024:1600,longest=Math.max(r.w,r.h,1),L=Math.min(maxPx,Math.max(700,longest*2.2)),k=bkScale*(L/longest),vp=page.getViewport({scale:k}),f=k/bkScale,cw=Math.max(1,Math.round(r.w*f)),ch=Math.max(1,Math.round(r.h*f));
@@ -910,7 +953,7 @@ ov.addEventListener('pointermove',e=>{if(d)upd(pt(e))});
 ov.addEventListener('pointerup',e=>{if(!d)return;const p=pt(e),r={x:Math.min(d.x,p.x),y:Math.min(d.y,p.y),w:Math.abs(p.x-d.x),h:Math.abs(p.y-d.y)};d=null;if(r.w<14||r.h<14){if(box){box.remove();box=null}bkHint('That area is too small. Drag a bigger box.');return}bkSnipDone(r)});
 ov.addEventListener('pointercancel',()=>{d=null;if(box){box.remove();box=null}})})();
 /* ----- AI chat about the book ----- */
-function bkSheet(open){const c=$('bkChat'),r=$('bkRead');if(!c)return;const was=c.classList.contains('open');c.classList.toggle('open',!!open);r.classList.toggle('chatopen',!!open);$('bkFab').setAttribute('aria-expanded',String(!!open));if(!!open!==was&&innerWidth>=900)setTimeout(()=>{if(bkPdf&&Math.abs($('bkStage').clientWidth-bkLastW)>12)bkLayoutAll()},0)}
+function bkSheet(open){if(open&&innerWidth<900&&$('bkMarks').classList.contains('open'))bkMarks(false);const c=$('bkChat'),r=$('bkRead');if(!c)return;const was=c.classList.contains('open');c.classList.toggle('open',!!open);r.classList.toggle('chatopen',!!open);$('bkFab').setAttribute('aria-expanded',String(!!open));if(!!open!==was&&innerWidth>=900)setTimeout(()=>{if(bkPdf&&Math.abs($('bkStage').clientWidth-bkLastW)>12)bkLayoutAll()},0)}
 function bkEl(cls,text,m){const d=document.createElement('div');d.className='msg '+cls;rich(d,text);
 if(m&&m.img){const im=document.createElement('img');im.className='msgimg';im.alt='Picture sent';im.src='data:'+m.img.mime_type+';base64,'+m.img.data;im.onclick=()=>lightbox(im.src);d.prepend(im)}
 if(m&&m.role==='user'){const q=document.createElement('div');q.className='mquote';q.textContent=(m.quote?'↩ '+plain(m.quote).replace(/\s+/g,' ').slice(0,80)+' · ':'')+'Page '+m.page+(m.sel?' · highlighted: '+m.sel.slice(0,80):'');d.prepend(q)}
@@ -969,18 +1012,21 @@ catch(e){err.textContent='Could not save the card.';saveBtn.disabled=false}},'go
 acts.append(draft,aiChipEl(),saveBtn,button('Cancel',()=>bg.remove()));box.append(err,acts);bg.append(box);document.body.append(bg);q.focus()}
 /* ----- wiring ----- */
 $('bkLibBtn').onclick=bkClose;$('bkPrev').onclick=()=>bkGo(bkPage-1,true);$('bkNext').onclick=()=>bkGo(bkPage+1,true);
-{const jump=()=>{bkGo($('bkPg').value);$('bkPg').blur()};$('bkGoBtn').onclick=jump;$('bkPg').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();jump()}};$('bkPg').onfocus=()=>$('bkPg').select()}
+{const jump=()=>{bkGo($('bkPg').value);$('bkPg').blur()};$('bkPg').onchange=()=>bkGo($('bkPg').value);$('bkPg').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();jump()}};$('bkPg').onfocus=()=>$('bkPg').select()}
 $('bkStage').addEventListener('scroll',bkOnScroll,{passive:true});
 {const z=d=>{bkZoom=bclamp(Math.round((bkZoom+d)*100)/100,.5,3);bkLayoutAll()};$('bkZo').onclick=()=>z(-.25);$('bkZi').onclick=()=>z(.25)}
 $('bkSnipBtn').onclick=()=>bkSnipOn?bkSnipStop():bkSnipStart();
 $('bkPageImg').onclick=async()=>{if(!bkPdf)return;bkHint('Capturing the page…');try{bkImg=await bkGrab(null,bkPage);bkImgPage=bkPage;bkRenderAtt();bkHint(bkHintTxt);if(BSET.auto&&ai)await bkSend();else{bkSheet(true);$('bkIn').focus()}}catch(e){bkHint('Could not capture the page.')}};
+$('bkMark').onclick=()=>{if(!bkCur)return;const h=bmHere();if(h){bmFocus=h.id;bkMarks(true);bkRenderMarks()}else{bmAdd(bkPage);bkMarkUi();bkRenderMarks();bkHint('Bookmarked page '+bkPage+'. Open 🔖 Bookmarks to add a note.')}};
+$('bkMarkAdd').onclick=()=>{if(!bkCur)return;bmFocus=bmAdd(bkPage).id;bkMarkUi();bkRenderMarks()};
+$('bkMarkFab').onclick=()=>bkMarks(true);$('bkMarkClose').onclick=()=>bkMarks(false);
 $('bkFab').onclick=()=>{bkSheet(true);if(!$('bkIn').disabled)$('bkIn').focus()};$('bkClose').onclick=()=>bkSheet(false);
 {const de=document.documentElement,rq=de.requestFullscreen||de.webkitRequestFullscreen,b=$('bkFs');if(!rq)b.classList.add('hide');else b.onclick=()=>{try{if(document.fullscreenElement||document.webkitFullscreenElement)(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{const p=rq.call(de);if(p&&p.catch)p.catch(()=>{})}}catch(e){}}}
 $('bkSend').onclick=bkSend;$('bkClear').onclick=()=>{if(bkBusy||!bkCur)return;bkChats[bkCur.id]=[];bkReply=null;bkRenderRep();bkRenderChat()};
 $('bkIn').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();bkSend()}});
 $('bkNear').onchange=()=>{BSET.near=bclamp(bnum($('bkNear').value,1),0,2);bkSaveSet()};$('bkAuto').onchange=()=>{BSET.auto=$('bkAuto').checked;bkSaveSet()};
 $('bkMk').onclick=()=>{if(!bkCur)return;const last=(bkChats[bkCur.id]||[]).slice().reverse().find(m=>m.role==='model');bkCardDialog(bkSel?{sel:bkSel,page:(bkSelPage||bkPage),img:bkImg}:last?{text:last.text,page:last.page,img:last.srcImg}:{page:bkPage,img:bkImg})};
-document.addEventListener('keydown',e=>{if(document.body.dataset.view!=='book')return;if(e.key==='Escape'){if(bkSnipOn)bkSnipStop();else if($('bkChat').classList.contains('open'))bkSheet(false);return}
+document.addEventListener('keydown',e=>{if(document.body.dataset.view!=='book')return;if(e.key==='Escape'){if(bkSnipOn)bkSnipStop();else if($('bkChat').classList.contains('open'))bkSheet(false);else if($('bkMarks').classList.contains('open'))bkMarks(false);return}
 const tg=document.activeElement&&document.activeElement.tagName;if(/INPUT|TEXTAREA|SELECT/.test(tg||''))return;if(e.key==='ArrowLeft')bkGo(bkPage-1);else if(e.key==='ArrowRight')bkGo(bkPage+1)});
 let bkRT;addEventListener('resize',()=>{clearTimeout(bkRT);bkRT=setTimeout(()=>{if(document.body.dataset.view==='book'&&bkPdf&&bkCur&&Math.abs($('bkStage').clientWidth-bkLastW)>12)bkLayoutAll()},250)});
 function bookEnter(){$('bkNear').value=String(bclamp(bnum(BSET.near,1),0,2));$('bkAuto').checked=!!BSET.auto;if(bkCur&&bkPdf){$('bkLib').classList.add('hide');$('bkRead').classList.remove('hide');bkRenderChat();bkLayoutAll()}else{$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkRenderList()}}
