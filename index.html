@@ -113,6 +113,7 @@ body.bkreading{overflow:hidden}
 .bkfull{--bkmw:min(340px,100vw)}
 .bkmarks{position:fixed;top:0;left:0;bottom:0;width:var(--bkmw);z-index:55;display:flex;flex-direction:column;min-height:0;background:var(--surface);border-right:1px solid var(--line);box-shadow:6px 0 24px rgba(0,0,0,.35);transform:translateX(-105%);visibility:hidden;transition:transform .25s,visibility 0s .25s}
 .bkmarks.open{transform:none;visibility:visible;transition:transform .25s}
+.bmrow{display:flex;align-items:center;gap:6px;border-top:1px dashed var(--line);padding-top:2px;padding-bottom:2px}.bmtree .bmrow:first-child{border-top:0}.bmname{flex:1;min-width:0;min-height:40px;text-align:left;background:none;border:0;color:var(--fg);font:inherit;padding:6px 4px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bmname:hover{color:var(--accent)}.bmfolder{font-weight:700}.bmpg{font-size:12px;color:var(--muted);white-space:nowrap}.bmsp{width:30px;flex:none}.bmtog{width:30px;min-width:30px;padding:2px 0;flex:none}.bmed{padding:2px 8px;flex:none}.bmrow input{padding:6px 8px}.bmnotes{margin-top:18px;border-top:1px solid var(--line);padding-top:8px}.bmnotes summary{cursor:pointer;font-weight:700;padding:6px 0}
 .bkmfab{right:auto;left:14px;background:var(--accent);color:var(--accentfg)}
 .bkfull.markopen .bkmfab{display:none}
 body.bkreading .notefab{display:none}
@@ -828,37 +829,76 @@ const bnum=(v,d)=>isFinite(Number(v))&&v!==null&&v!==''?Number(v):d,bclamp=(v,a,
 function bkClean(a){if(!Array.isArray(a))return[];return a.filter(b=>b&&b.id&&typeof b.name==='string').slice(0,100).map(b=>({id:String(b.id).slice(0,60),name:b.name.slice(0,150),pages:bnum(b.pages,0),page:Math.max(1,bnum(b.page,1)),size:bnum(b.size,0),t:bnum(b.t,Date.now())}))}
 let BOOKS=bkClean(safeGet(BKK)),BSET=Object.assign({auto:true,near:1},safeGet(BKS)||{});
 const bkSave=()=>safeSet(BKK,BOOKS),bkSaveSet=()=>safeSet(BKS,BSET);
-let bkHintT=null,bmFocus=null,BMK=cleanBm(safeGet('sr.bookmarks'));
-function cleanBm(a){if(!Array.isArray(a))return[];return a.filter(x=>x&&x.id&&x.bid&&isFinite(Number(x.page))).slice(0,3000).map(x=>({id:String(x.id),bid:String(x.bid),page:Math.max(1,Math.round(Number(x.page))),label:String(x.label||'').slice(0,80),note:String(x.note||'').slice(0,3000),ts:bnum(x.ts,Date.now())}))}
+let bkHintT=null,bmFocus=null,bmView=null,bmRen=null,bmRenF=null,bmNotesOpen=false,bmLast='',BMK=cleanBm(safeGet('sr.bookmarks')),BMF=new Set((Array.isArray(safeGet('sr.bmfold'))?safeGet('sr.bmfold'):[]).map(String));
+function cleanBm(a){if(!Array.isArray(a))return[];return a.filter(x=>x&&x.id&&x.bid&&isFinite(Number(x.page))).slice(0,3000).map(x=>({id:String(x.id),bid:String(x.bid),page:Math.max(1,Math.round(Number(x.page))),label:String(x.label||'').slice(0,120),note:String(x.note||'').slice(0,3000),ts:bnum(x.ts,Date.now())}))}
 const bmSave=()=>safeSet('sr.bookmarks',BMK),bmHere=()=>bkCur?BMK.find(x=>x.bid===bkCur.id&&x.page===bkPage):null;
 function bmAdd(page){let h=BMK.find(x=>bkCur&&x.bid===bkCur.id&&x.page===page);if(!h){h={id:id(),bid:bkCur.id,page,label:'',note:'',ts:Date.now()};BMK.push(h);bmSave()}return h}
 function bkMarkUi(){if(!bkCur)return;const h=bmHere(),b=$('bkMark'),a=$('bkMarkAdd');if(b){b.setAttribute('aria-pressed',String(!!h));b.textContent=h?'🔖 ✓':'🔖';b.title=h?'This page is bookmarked (tap to open its note)':'Bookmark this page'}if(a){a.disabled=!!h;a.textContent=h?'🔖 Page '+bkPage+' is bookmarked':'+ Bookmark page '+bkPage}}
 function bkMarks(open){const p=$('bkMarks'),r=$('bkRead');if(!p)return;const was=p.classList.contains('open');if(open&&innerWidth<900&&$('bkChat').classList.contains('open'))bkSheet(false);p.classList.toggle('open',!!open);r.classList.toggle('markopen',!!open);$('bkMarkFab').setAttribute('aria-expanded',String(!!open));if(open)bkRenderMarks();bkMarkUi();if(!!open!==was&&innerWidth>=900)setTimeout(()=>{if(bkPdf&&Math.abs($('bkStage').clientWidth-bkLastW)>12)bkLayoutAll()},0)}
-function bkRenderMarks(){if(!bkCur||!$('bkMarks').classList.contains('open'))return;const box=$('bkMarkList'),keep=box.scrollTop;box.replaceChildren();$('bkMarkSub').textContent=bkCur.name;
+const bmNorm=t=>String(t).split('::').map(x=>x.trim()).filter(Boolean).join('::').slice(0,120),bmName=x=>x.label||('Page '+x.page),bmFoldKey=p=>(bkCur?bkCur.id:'')+'|'+p,bmFoldSave=()=>safeSet('sr.bmfold',[...BMF].slice(-500));
+function bmOpenPath(label){const ps=String(label).split('::');let p='';for(let i=0;i<ps.length-1;i++){p=p?p+'::'+ps[i]:ps[i];BMF.delete(bmFoldKey(p))}bmFoldSave()}
+function bmTree(list){const root={kids:new Map(),marks:[],path:'',name:''};
+ for(const x of list){let n=root,p='';for(const s of x.label.split('::').map(t=>t.trim()).filter(Boolean)){p=p?p+'::'+s:s;let k=n.kids.get(s);if(!k){k={kids:new Map(),marks:[],path:p,name:s};n.kids.set(s,k)}n=k}n.marks.push(x)}
+ const mp=n=>{let m=Infinity;for(const x of n.marks)m=Math.min(m,x.page);for(const k of n.kids.values())m=Math.min(m,mp(k));return n.mp=m,m};mp(root);return root}
+function bmCount(n){let c=n.marks.length;for(const k of n.kids.values())c+=bmCount(k);return c}
+function bkRenderMarks(){if(!bkCur||!$('bkMarks').classList.contains('open'))return;const box=$('bkMarkList');
 const mk=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e};
-const h1=mk('h2','','Bookmarks');h1.style.margin='4px 0 6px';box.append(h1);
+if(bmView&&!BMK.some(y=>y.id===bmView&&y.bid===bkCur.id))bmView=null;
+const sig=bkCur.id+'|'+(bmView||'list'),keep=bmLast===sig?box.scrollTop:0;bmLast=sig;box.replaceChildren();$('bkMarkSub').textContent=bkCur.name;
+const addBar=$('bkMarkAdd').parentElement;if(addBar)addBar.classList.toggle('hide',!!bmView);
 const list=BMK.filter(x=>x.bid===bkCur.id).sort((p,q)=>p.page-q.page);
-if(!list.length)box.append(mk('p','note','No bookmarks yet. Tap 🔖 in the toolbar, or the button above, to bookmark the page you are on.'));
 let focusEl=null;
-for(const x of list){const it=mk('div','nitem'),head=mk('div','row');
- const go=button('Page '+x.page,()=>{bkGo(x.page,true);if(innerWidth<900)bkMarks(false)},'go');
- const lab=document.createElement('input');lab.value=x.label;lab.maxLength=80;lab.placeholder='Title (optional)';lab.setAttribute('aria-label','Bookmark title');lab.style.cssText='flex:1;min-width:0';lab.onchange=()=>{x.label=lab.value.trim();bmSave()};
- head.append(go,lab);
- const ta=document.createElement('textarea');ta.value=x.note;ta.maxLength=3000;ta.placeholder='Note about this page…';ta.setAttribute('aria-label','Bookmark note');ta.style.cssText='min-height:70px;margin-top:8px';ta.onchange=()=>{x.note=ta.value.trim();bmSave()};
+if(bmView){ /* ---- note view for one bookmark ---- */
+ const x=list.find(y=>y.id===bmView);
+ box.append(button('‹ All bookmarks',()=>{bmView=null;bkRenderMarks()},''));
+ const h=mk('h2','',disp(bmName(x)));h.style.margin='10px 0 4px';box.append(h);
+ const row=mk('div','row');row.style.margin='0 0 8px';
+ row.append(button('Go to page '+x.page,()=>{bkGo(x.page,true);if(innerWidth<900)bkMarks(false)},'go'));box.append(row);
+ const lab=document.createElement('input');lab.value=x.label;lab.maxLength=120;lab.placeholder='Topic name (use :: for a sub-bookmark)';lab.setAttribute('aria-label','Bookmark topic name');lab.style.cssText='width:100%;box-sizing:border-box';
+ lab.onchange=()=>{x.label=bmNorm(lab.value);lab.value=x.label;bmSave();bmOpenPath(x.label);h.textContent=disp(bmName(x))};box.append(lab);
+ const ta=document.createElement('textarea');ta.value=x.note;ta.maxLength=3000;ta.placeholder='Note about this page…';ta.setAttribute('aria-label','Bookmark note');ta.style.cssText='min-height:160px;margin-top:8px;width:100%;box-sizing:border-box';ta.onchange=()=>{x.note=ta.value.trim();bmSave()};box.append(ta);
  const a=mk('div','acts');
  const toN=button('Copy to Notes',()=>{const t=((x.label?x.label+'\n':'')+(ta.value.trim())).trim();if(!t){flash(toN,'Write a note first');return}x.note=ta.value.trim();bmSave();bkNote(t,x.page);flash(toN,'Saved ✓')});
- const del=button('Delete',()=>{},'danger');confirmDelete(del,'Delete',()=>{BMK=BMK.filter(y=>y!==x);bmSave();bkMarkUi();bkRenderMarks()});
- a.append(toN,del);it.append(head,ta,a);box.append(it);if(bmFocus===x.id)focusEl=[it,ta]}
-const h2=mk('h2','','Notes from this book');h2.style.margin='18px 0 6px';box.append(h2);
-const pre=(bkCur.name+' p.').slice(0,115),ns=NOTES.filter(n=>n.src&&n.src.startsWith(pre));
-if(!ns.length)box.append(mk('p','note','Notes you save from the AI chat or from highlighted text show up here.'));
-for(const n of ns.slice(0,100)){const it=mk('div','nitem'),pg=/p\.(\d+)\s*$/.exec(n.src);
- it.append(mk('p','note',(pg?'Page '+pg[1]:n.src)+' · '+new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})));
- const body=mk('div','fulltext');body.style.cssText='max-height:150px;overflow:auto';rich(body,n.t);it.append(body);
- const a=mk('div','acts');if(pg)a.append(button('Go to page',()=>{bkGo(+pg[1],true);if(innerWidth<900)bkMarks(false)},'go'));
- const cp=button('Copy',()=>copyText(n.t).then(()=>flash(cp,'Copied ✓')).catch(()=>flash(cp,'Failed')));a.append(cp);it.append(a);box.append(it)}
+ const del=button('Delete',()=>{},'danger');confirmDelete(del,'Delete',()=>{BMK=BMK.filter(y=>y!==x);bmSave();bmView=null;bkMarkUi();bkRenderMarks()});
+ a.append(toN,del);box.append(a);
+ if(bmFocus===x.id){bmFocus=null;focusEl=ta}
+}else{ /* ---- topic list (tree built from "::") ---- */
+ if(!list.length)box.append(mk('p','note','No bookmarks yet. Tap 🔖 in the toolbar, or the button above, to bookmark the page you are on.'));
+ else{box.append(mk('p','note','Tap a topic to open its note. Tap ✎ to rename it; name it like Chapter 1::Limits to put it inside Chapter 1.'));
+  const root=bmTree(list),wrap=mk('div','bmtree');
+  const commitM=(x,inp)=>{if(inp._d)return;inp._d=1;x.label=bmNorm(inp.value);bmSave();bmRen=null;bmOpenPath(x.label);bkRenderMarks()};
+  const commitF=(n,inp)=>{if(inp._d)return;inp._d=1;const nv=bmNorm(inp.value),old=n.path;bmRenF=null;if(nv&&nv!==old){for(const x of BMK)if(x.bid===bkCur.id&&(x.label===old||x.label.startsWith(old+'::')))x.label=nv+x.label.slice(old.length);bmSave();bmOpenPath(nv+'::x')}bkRenderMarks()};
+  const edit=(inp,commit,cancel)=>{inp.maxLength=120;inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();commit()}else if(e.key==='Escape'){e.stopPropagation();inp._d=1;cancel();bkRenderMarks()}};inp.onblur=commit;focusEl=inp};
+  const rowM=(x,depth,name,kidsN,folded,n)=>{const r=mk('div','bmrow');r.style.paddingLeft=(depth*16)+'px';
+   if(kidsN){const t=button(folded?'▸':'▾',()=>{folded?BMF.delete(bmFoldKey(n.path)):BMF.add(bmFoldKey(n.path));bmFoldSave();bkRenderMarks()},'bmtog');t.setAttribute('aria-label',(folded?'Expand ':'Collapse ')+name);r.append(t)}else r.append(mk('span','bmsp'));
+   if(bmRen===x.id){const inp=document.createElement('input');inp.value=x.label;inp.placeholder='Page '+x.page+' — name it, use :: for sub-bookmarks';inp.setAttribute('aria-label','Bookmark topic name');inp.style.cssText='flex:1;min-width:0';edit(inp,()=>commitM(x,inp),()=>{bmRen=null});r.append(inp)}
+   else{const m=button(name,()=>{bmView=x.id;bkRenderMarks()},'bmname');m.className='bmname';r.append(m,mk('span','bmpg','p.'+x.page),button('✎',()=>{bmRen=x.id;bkRenderMarks()},'bmed'))}
+   wrap.append(r)};
+  const draw=(n,depth)=>{const items=[];for(const k of n.kids.values())items.push({k,mp:k.mp});if(n===root)for(const x of n.marks)items.push({x,mp:x.page});
+   items.sort((p,q)=>p.mp-q.mp||String((p.k||{}).name||'').localeCompare(String((q.k||{}).name||''),undefined,{numeric:true}));
+   for(const it of items){
+    if(it.x){rowM(it.x,depth,'Page '+it.x.page,0,false,null);continue}
+    const k=it.k,folded=BMF.has(bmFoldKey(k.path)),hasKids=k.kids.size>0;
+    if(k.marks.length){k.marks.sort((p,q)=>p.page-q.page).forEach((x,i)=>rowM(x,depth,k.name,i===0&&hasKids?1:0,folded,k))}
+    else{const r=mk('div','bmrow');r.style.paddingLeft=(depth*16)+'px';
+     const t=button(folded?'▸':'▾',()=>{folded?BMF.delete(bmFoldKey(k.path)):BMF.add(bmFoldKey(k.path));bmFoldSave();bkRenderMarks()},'bmtog');t.setAttribute('aria-label',(folded?'Expand ':'Collapse ')+k.name);r.append(t);
+     if(bmRenF===k.path){const inp=document.createElement('input');inp.value=k.path;inp.setAttribute('aria-label','Rename folder');inp.style.cssText='flex:1;min-width:0';edit(inp,()=>commitF(k,inp),()=>{bmRenF=null});r.append(inp)}
+     else{const m=button(k.name,()=>{folded?BMF.delete(bmFoldKey(k.path)):BMF.add(bmFoldKey(k.path));bmFoldSave();bkRenderMarks()},'bmname');m.className='bmname bmfolder';r.append(m,mk('span','bmpg',bmCount(k)+' ▤'),button('✎',()=>{bmRenF=k.path;bkRenderMarks()},'bmed'))}
+     wrap.append(r)}
+    if(hasKids&&!folded)draw(k,depth+1)}};
+  draw(root,0);box.append(wrap)}
+ const pre=(bkCur.name+' p.').slice(0,115),ns=NOTES.filter(n=>n.src&&n.src.startsWith(pre));
+ if(ns.length){const d=document.createElement('details');d.className='bmnotes';d.open=bmNotesOpen;d.ontoggle=()=>{bmNotesOpen=d.open};
+  d.append(mk('summary','','Notes from this book ('+ns.length+')'));
+  for(const n of ns.slice(0,100)){const it=mk('div','nitem'),pg=/p\.(\d+)\s*$/.exec(n.src);
+   it.append(mk('p','note',(pg?'Page '+pg[1]:n.src)+' · '+new Date(n.ts).toLocaleDateString(undefined,{month:'short',day:'numeric'})));
+   const body=mk('div','fulltext');body.style.cssText='max-height:150px;overflow:auto';rich(body,n.t);it.append(body);
+   const a=mk('div','acts');if(pg)a.append(button('Go to page',()=>{bkGo(+pg[1],true);if(innerWidth<900)bkMarks(false)},'go'));
+   const cp=button('Copy',()=>copyText(n.t).then(()=>flash(cp,'Copied ✓')).catch(()=>flash(cp,'Failed')));a.append(cp);it.append(a);d.append(it)}
+  box.append(d)}
+}
 box.scrollTop=keep;
-if(focusEl){const[it,ta]=focusEl;bmFocus=null;requestAnimationFrame(()=>{it.scrollIntoView({block:'nearest'});ta.focus({preventScroll:true})})}}
+if(focusEl){const el=focusEl;requestAnimationFrame(()=>{try{el.scrollIntoView({block:'nearest'})}catch(e){}el.focus({preventScroll:true});if(el.select&&el.tagName==='INPUT')el.select()})}}
 
 let bkDbP;
 function bkDb(){return bkDbP||(bkDbP=new Promise((ok,no)=>{try{const r=indexedDB.open('studyrank-books',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>ok(r.result);r.onerror=()=>{bkDbP=null;no(r.error)}}catch(e){bkDbP=null;no(e)}}))}
@@ -887,7 +927,7 @@ try{const p1=await doc.getPage(1),v=p1.getViewport({scale:1});bkDims=[null,{w:v.
 if(bkPdf!==doc)return;
 $('bkLib').classList.add('hide');$('bkRead').classList.remove('hide');$('bkTitle').textContent=m.name;$('bkSub').textContent=m.name;$('bkPg').max=m.pages;bkSay('');bkRenderChat();bkRenderSel();bkRenderAtt();bkRenderRep();bkLock();window.scrollTo(0,0);bkBuild();bkPageUi();bkRenderMarks()}
 function bkReset(){bkTok++;bkGen++;if(bkIO){bkIO.disconnect();bkIO=null}for(const t of bkTasks.values()){try{t.cancel()}catch(e){}}bkTasks.clear();bkSt.clear();if(bkPdf){try{bkPdf.destroy()}catch(e){}}bkPdf=null;bkWraps=[];$('bkPages').replaceChildren()}
-function bkClose(){bkSnipStop();bkSheet(false);bkMarks(false);try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}catch(e){}bkReset();bkCur=null;bkSel='';bkImg=null;$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkLock();bkRenderList()}
+function bkClose(){bmView=null;bmRen=null;bmRenF=null;bkSnipStop();bkSheet(false);bkMarks(false);try{if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{})}catch(e){}bkReset();bkCur=null;bkSel='';bkImg=null;$('bkRead').classList.add('hide');$('bkLib').classList.remove('hide');bkLock();bkRenderList()}
 function bkLock(){document.body.classList.toggle('bkreading',document.body.dataset.view==='book'&&!!bkCur)}
 function bkBuild(){const fr=document.createDocumentFragment();bkWraps=[];for(let n=1;n<=bkCur.pages;n++){const w=document.createElement('div');w.className='bkpg';w.dataset.n=n;fr.append(w);bkWraps.push(w)}$('bkPages').replaceChildren(fr);bkLayoutAll();bkDimLoop(bkTok);bkHint(bkHintTxt)}
 /* ----- page rendering and text ----- */
@@ -1017,8 +1057,8 @@ $('bkStage').addEventListener('scroll',bkOnScroll,{passive:true});
 {const z=d=>{bkZoom=bclamp(Math.round((bkZoom+d)*100)/100,.5,3);bkLayoutAll()};$('bkZo').onclick=()=>z(-.25);$('bkZi').onclick=()=>z(.25)}
 $('bkSnipBtn').onclick=()=>bkSnipOn?bkSnipStop():bkSnipStart();
 $('bkPageImg').onclick=async()=>{if(!bkPdf)return;bkHint('Capturing the page…');try{bkImg=await bkGrab(null,bkPage);bkImgPage=bkPage;bkRenderAtt();bkHint(bkHintTxt);if(BSET.auto&&ai)await bkSend();else{bkSheet(true);$('bkIn').focus()}}catch(e){bkHint('Could not capture the page.')}};
-$('bkMark').onclick=()=>{if(!bkCur)return;const h=bmHere();if(h){bmFocus=h.id;bkMarks(true);bkRenderMarks()}else{bmAdd(bkPage);bkMarkUi();bkRenderMarks();bkHint('Bookmarked page '+bkPage+'. Open 🔖 Bookmarks to add a note.')}};
-$('bkMarkAdd').onclick=()=>{if(!bkCur)return;bmFocus=bmAdd(bkPage).id;bkMarkUi();bkRenderMarks()};
+$('bkMark').onclick=()=>{if(!bkCur)return;const h=bmHere();if(h){bmView=h.id;bmFocus=h.id;bkMarks(true);bkRenderMarks()}else{bmAdd(bkPage);bkMarkUi();bkRenderMarks();bkHint('Bookmarked page '+bkPage+'. Open 🔖 Bookmarks to add a note.')}};
+$('bkMarkAdd').onclick=()=>{if(!bkCur)return;bmView=null;bmRen=bmAdd(bkPage).id;bkMarkUi();bkRenderMarks()};
 $('bkMarkFab').onclick=()=>bkMarks(true);$('bkMarkClose').onclick=()=>bkMarks(false);
 $('bkFab').onclick=()=>{bkSheet(true);if(!$('bkIn').disabled)$('bkIn').focus()};$('bkClose').onclick=()=>bkSheet(false);
 {const de=document.documentElement,rq=de.requestFullscreen||de.webkitRequestFullscreen,b=$('bkFs');if(!rq)b.classList.add('hide');else b.onclick=()=>{try{if(document.fullscreenElement||document.webkitFullscreenElement)(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{const p=rq.call(de);if(p&&p.catch)p.catch(()=>{})}}catch(e){}}}
