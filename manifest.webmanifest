@@ -2,6 +2,7 @@
   "name": "StudyRank",
   "short_name": "StudyRank",
   "description": "Study cards, AI grading, exams and a book reader.",
+  "id": "./index.html",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
