@@ -1452,5 +1452,8 @@ try{const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);await fetch('
 addEventListener('online',check);addEventListener('offline',()=>show(false));pill.addEventListener('click',check);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});setInterval(()=>{if(!document.hidden)check()},30000);check()})();
 /* ---------- Offline support: service worker caches the app + libraries (sw.js) ---------- */
-if('serviceWorker' in navigator&&location.protocol!=='file:')addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})});
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+function showUpdate(){if(document.getElementById('srUpd'))return;const b=document.createElement('button');b.id='srUpd';b.type='button';b.textContent='🔄 New version ready — tap to reload';b.style.cssText='position:fixed;left:50%;transform:translateX(-50%);top:max(10px,env(safe-area-inset-top));z-index:70;font:600 13px var(--body);background:var(--accent);color:var(--accentfg);border:0;border-radius:99px;padding:9px 16px;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer';b.onclick=()=>location.reload();document.body.appendChild(b)}
+navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='sr-update')showUpdate()});
+addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').then(r=>{document.addEventListener('visibilitychange',()=>{if(!document.hidden)r.update().catch(()=>{})})}).catch(()=>{})})}
 </script></body></html>

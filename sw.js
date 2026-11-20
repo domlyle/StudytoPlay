@@ -1,6 +1,6 @@
 /* StudyRank service worker: makes the app open and work offline.
    Bump CACHE (e.g. 'sr-v2') only if you change the PRECACHE list. */
-const CACHE='sr-v1';
+const CACHE='sr-v2';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const LIBS=[
  'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js',
@@ -33,14 +33,26 @@ self.addEventListener('activate',e=>{
 const ok=r=>r&&(r.ok||r.type==='opaque');
 async function put(req,res){if(ok(res)){const c=await caches.open(CACHE);c.put(req,res.clone()).catch(()=>{})}return res}
 
-/* Pages: try the network first (so updates arrive), give up after 3s and use the cached copy. */
-function networkFirst(req){
-  const cached=caches.match(req,{ignoreSearch:true}).then(r=>r||caches.match('./index.html'));
+/* Pages: ask the network first and bypass the browser's HTTP cache (GitHub Pages keeps files for ~10 min),
+   give up after 3s and show the cached copy. If a newer version arrives after that, tell the page. */
+const sig=r=>(r.headers.get('etag')||r.headers.get('last-modified')||'')+'|'+(r.headers.get('content-length')||'');
+function notify(){self.clients.matchAll({type:'window'}).then(cs=>cs.forEach(c=>c.postMessage({type:'sr-update'})))}
+function networkFirst(req,evt){
   return new Promise(resolve=>{
     let done=false;
-    const fallback=()=>cached.then(r=>{if(!done&&r){done=true;resolve(r)}});
-    const t=setTimeout(fallback,3000);
-    fetch(req).then(res=>{clearTimeout(t);if(ok(res)){done=true;put(req,res.clone());resolve(res)}else fallback()}).catch(()=>{clearTimeout(t);fallback().then(()=>{if(!done){done=true;resolve(Response.error())}})});
+    const cachedP=caches.match(req,{ignoreSearch:true}).then(r=>r||caches.match('./index.html'));
+    const useCache=()=>cachedP.then(r=>{if(!done&&r){done=true;resolve(r);return true}return false});
+    const t=setTimeout(useCache,3000);
+    const work=fetch(req,{cache:'no-cache'}).then(async res=>{
+      clearTimeout(t);
+      if(res.type==='opaqueredirect'){if(!done){done=true;resolve(res)}return}
+      if(!ok(res)){await useCache();return}
+      const old=await cachedP;
+      const changed=old&&sig(old)!==sig(res);
+      await put(req,res.clone());
+      if(!done){done=true;resolve(res)}else if(changed)notify();
+    }).catch(async()=>{clearTimeout(t);if(!(await useCache())&&!done){done=true;resolve(Response.error())}});
+    evt.waitUntil(work);
   });
 }
 /* Libraries/fonts: cached copy first, fetch and store if missing. */
@@ -56,7 +68,7 @@ self.addEventListener('fetch',e=>{
   if(req.method!=='GET')return;
   const u=new URL(req.url);
   if(u.origin===location.origin){
-    e.respondWith(req.mode==='navigate'?networkFirst(req):
+    e.respondWith(req.mode==='navigate'?networkFirst(req,e):
       fetch(req).then(r=>put(req,r)).catch(()=>caches.match(req,{ignoreSearch:true}).then(r=>r||Response.error())));
   }else if(CDN.includes(u.hostname)){
     e.respondWith(cacheFirst(req).catch(()=>Response.error()));
