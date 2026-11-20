@@ -131,8 +131,9 @@ body.bkreading .notefab{display:none}
 #bkMarkFab[data-here="1"]{background:var(--accent);color:var(--accentfg);border-color:var(--accent)}
 @media(min-width:900px){.bkfull.markopen>.bktop,.bkfull.markopen>.bkbar,.bkfull.markopen>.bkhint,.bkfull.markopen>.bkview{margin-left:var(--bkmw)}}
 @media(prefers-reduced-motion:reduce){.bkchat,.bkmarks{transition:none}}.bkmarks{max-width:100vw}.bkgrip{position:absolute;top:0;bottom:0;width:14px;z-index:6;cursor:col-resize;touch-action:none;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none}#bkChat>.bkgrip{left:0}#bkMarks>.bkgrip{right:0}.bkgrip::before{content:'';width:4px;height:48px;border-radius:2px;background:var(--muted,var(--line));opacity:.55}.bkgrip:hover::before,.bkgrip:focus-visible::before,.bkgrip.drag::before{background:var(--accent);opacity:1}.bkgrip:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}@media(pointer:coarse){.bkgrip{width:24px}}
+.netpill{position:fixed;left:max(10px,env(safe-area-inset-left));bottom:max(10px,env(safe-area-inset-bottom));z-index:45;display:flex;align-items:center;gap:7px;font:600 12px var(--body);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 11px;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer}.netpill i{width:9px;height:9px;border-radius:50%;background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 25%,transparent)}.netpill.off i{background:var(--bad);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad) 25%,transparent)}.netpill.chk i{background:var(--muted);box-shadow:none}
 </style></head>
-<body><main>
+<body><button id="netPill" class="netpill" type="button" role="status" aria-live="polite" title="Tap to re-check connection"><i></i><span>Online</span></button><main>
 <div class="top"><div><h1>StudyRank</h1><span>Solve problems. Earn points. Earn your free time.</span></div><button id="menuBtn" class="mini" type="button" aria-expanded="false" aria-controls="menuPanel">☰ Menu</button></div>
 <nav id="menuPanel" class="card menu hide" aria-label="Pages"><button type="button" class="mini" data-view="study">Study</button><button type="button" class="mini" data-view="log">Study log</button><button type="button" class="mini" data-view="exam">Exam mode</button><button type="button" class="mini" data-view="book">Book reader</button><button type="button" class="mini" data-view="weak">Weak spots</button><button type="button" class="mini" data-view="tickets">Free time</button><button type="button" class="mini" data-view="profile">Profile and sync</button><button type="button" class="mini" data-view="ai">AI settings</button></nav>
 <section class="card"><div class="rank"><div><h2>Rank</h2><div id="rankName" class="rankname"></div></div><div id="pips" class="pips" aria-label="Stars in current rank"></div></div><div class="bar" aria-hidden="true"><i id="bar"></i></div><p id="rankNote" class="note"></p></section>
@@ -1371,6 +1372,14 @@ addEventListener('hashchange',()=>setView(location.hash.slice(1),true));
 setView(location.hash.slice(1),true);
 applyAI();renderNotes();renderWeak();renderDecks();pick();renderStats();swInit();gcImages();syncInit();try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
 })();
+/* ---------- Online / offline indicator (bottom-left on every page; tap to re-check) ---------- */
+(function(){const pill=document.getElementById('netPill');if(!pill)return;const lbl=pill.querySelector('span');let busy=false;
+function show(on){pill.classList.remove('chk');pill.classList.toggle('off',!on);lbl.textContent=on?'Online':'Offline';pill.title=on?'Connected. Tap to re-check.':'No internet. Saved decks still work. Tap to re-check.'}
+async function check(){if(busy)return;busy=true;if(!navigator.onLine){show(false);busy=false;return}
+pill.classList.add('chk');lbl.textContent='Checking…';
+try{const c=new AbortController(),t=setTimeout(()=>c.abort(),4000);await fetch('https://www.google.com/generate_204?'+Date.now(),{mode:'no-cors',cache:'no-store',signal:c.signal});clearTimeout(t);show(true)}catch(e){show(false)}busy=false}
+addEventListener('online',check);addEventListener('offline',()=>show(false));pill.addEventListener('click',check);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});setInterval(()=>{if(!document.hidden)check()},30000);check()})();
 /* ---------- Offline support: service worker caches the app + libraries (sw.js) ---------- */
 if('serviceWorker' in navigator&&location.protocol!=='file:')addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{})});
 </script></body></html>
